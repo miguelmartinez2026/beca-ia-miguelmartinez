@@ -63,6 +63,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Hash BCrypt de contraseñas, sin habilitar Spring Security completo -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
         <!-- Reducción de código repetitivo -->
         <dependency>
             <groupId>org.projectlombok</groupId>
