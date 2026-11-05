@@ -3,8 +3,8 @@
 **Proyecto:** Sistema de Mesa de Ayuda  
 **Microservicio:** `ms-usuarios`  
 **Práctica:** P1 — Del requerimiento al código con prompts  
-**Versión:** 0.3 — Revisión técnica para implementación  
-**Estado:** Base de desarrollo con decisiones provisionales  
+**Versión:** 0.4 — Implementación y verificación de P1
+**Estado:** Implementación técnica de P1 completada; decisiones de negocio provisionales
 **Herramienta de IA utilizada en el análisis inicial:** GitHub Copilot
 
 ---
@@ -530,24 +530,40 @@ Después de las interacciones anteriores, se consolidó el alcance técnico de P
 
 La evidencia original de Copilot corresponde a sus prompts y respuestas reales. Las decisiones técnicas consolidadas en este documento no deben atribuirse a la herramienta como si hubieran sido generadas durante esas interacciones.
 
-## 11. Estado y siguiente actividad
+## 11. Estado de la Práctica 1
 
-**Historias de usuario:** siete documentadas con escenarios positivos y negativos.
+Al 04/11/2026 se completó la implementación técnica del CRUD REST de `ms-usuarios`.
 
-**Requerimientos no funcionales:** cinco documentados.
+### Funcionalidades implementadas
 
-**Preguntas abiertas:** identificadas.
+- Migración Flyway V1 aplicada y verificada en PostgreSQL 16.
+- Entidad JPA `Usuario` y repositorio Spring Data JPA.
+- DTOs mediante Java records y validaciones Jakarta.
+- Cinco endpoints REST para crear, consultar, listar, actualizar y eliminar usuarios.
+- Contraseñas protegidas mediante BCrypt.
+- Manejo global de excepciones con `@RestControllerAdvice` y `ProblemDetail`.
+- Normalización del correo y control de duplicados.
 
-**Contrato CRUD de P1:** propuesto, con entradas, salidas, validaciones y errores.
+### Verificaciones realizadas
 
-**Modelo conceptual:** definido provisionalmente para una tabla de usuarios.
+Las operaciones CRUD fueron probadas manualmente mediante Postman, incluyendo escenarios exitosos y respuestas HTTP 400, 404 y 409.
 
-**Migración Flyway:** pendiente de diseñar y generar.
+Se implementaron 12 pruebas automatizadas: 3 de servicio con Mockito, 8 de controlador con MockMvc y 1 de validación del DTO.
 
-**Código y pruebas:** pendientes de implementación.
+La ejecución de `.\mvnw.cmd -B clean verify` finalizó con **BUILD SUCCESS** y 13 pruebas aprobadas, incluyendo la prueba inicial `contextLoads`.
 
-**Siguiente paso:** utilizar este documento como contexto para solicitar a GitHub Copilot el modelo físico PostgreSQL y la migración Flyway V1, revisando su propuesta antes de aceptar cambios.
+La verificación completa requiere PostgreSQL disponible y las variables de entorno `DB_USERNAME` y `DB_PASSWORD` configuradas.
 
----
+### Funcionalidades pendientes para prácticas posteriores
 
-*Especificación de trabajo para P1. Las funcionalidades no confirmadas están identificadas como propuestas. La bitácora registra las interacciones efectivas con GitHub Copilot.*
+- Autenticación mediante JWT.
+- Autorización de operaciones según roles.
+- Administración de cuentas y permisos.
+- Integración con los demás microservicios.
+- Contenedores y automatización CI.
+
+El CRUD desarrollado en P1 está destinado a pruebas en un entorno local controlado. No debe exponerse públicamente sin incorporar los controles de autenticación y autorización correspondientes.
+
+### Siguiente actividad
+
+Completar el README con las instrucciones de ejecución y pruebas, revisar las evidencias y preparar el Pull Request y el tag `p1-entrega`.
