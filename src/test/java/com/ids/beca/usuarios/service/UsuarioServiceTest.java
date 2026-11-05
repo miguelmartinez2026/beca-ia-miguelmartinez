@@ -106,6 +106,7 @@ class UsuarioServiceTest {
 		assertThat(respuesta.nombre()).isEqualTo("Nombre Nuevo");
 		assertThat(respuesta.email()).isEqualTo("nuevo@example.com");
 		verifyNoInteractions(passwordEncoder);
+		verify(usuarioRepository).saveAndFlush(existente);
 	}
 
 }
