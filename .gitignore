@@ -1,0 +1,19 @@
+
+# Maven - archivos generados
+/target/
+
+# Archivos locales de Java e IDE
+.classpath
+.project
+.settings/
+.idea/
+*.iml
+
+# Configuraciones locales
+.env
+.env.*
+!.env.example
+
+# Archivos temporales y registros
+*.log
+*.tmp
