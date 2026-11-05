@@ -1,3 +1,7 @@
+# Cadena de prompts — Paso 2: Modelo de datos y Flyway
+
+## Primera interacción: propuesta del modelo físico
+
 ## ROL
 Actúa como arquitecto de bases de datos y desarrollador backend senior especializado en Java 21, Spring Boot 3, PostgreSQL 16 y Flyway.
 
@@ -63,7 +67,7 @@ Espera mi aprobación explícita antes de implementar la migración.
 
 ---
 
-# Segunda interacción: aprobación e implementación
+## Segunda interacción: aprobación e implementación
 
 He revisado tu propuesta del modelo físico y la migración Flyway V1 para `ms-usuarios`.
 
