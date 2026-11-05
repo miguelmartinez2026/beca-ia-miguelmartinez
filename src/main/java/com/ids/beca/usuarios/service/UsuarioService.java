@@ -85,11 +85,18 @@ public class UsuarioService {
 		}
 	}
 
+	// Hibernate extrae el nombre de la restricción del texto del mensaje de PostgreSQL, que depende
+	// del idioma del servidor; con mensajes localizados devuelve null. En ese caso se confía en el
+	// SQLState 23505: al guardar un usuario, la única restricción única que el cliente puede violar
+	// es el índice de correo, porque el id lo genera la base de datos.
 	private boolean esViolacionDeEmailUnico(Throwable error) {
 		for (Throwable causa = error; causa != null; causa = causa.getCause()) {
 			if (causa instanceof ConstraintViolationException violacion) {
-				return SQLSTATE_UNIQUE_VIOLATION.equals(violacion.getSQLState())
-						&& INDICE_EMAIL_UNICO.equalsIgnoreCase(violacion.getConstraintName());
+				if (!SQLSTATE_UNIQUE_VIOLATION.equals(violacion.getSQLState())) {
+					return false;
+				}
+				String restriccion = violacion.getConstraintName();
+				return restriccion == null || INDICE_EMAIL_UNICO.equalsIgnoreCase(restriccion);
 			}
 		}
 		return false;
