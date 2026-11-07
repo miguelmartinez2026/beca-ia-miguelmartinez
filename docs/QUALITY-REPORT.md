@@ -53,11 +53,11 @@ Versiones tomadas de `pom.xml` y de los encabezados de los reportes **[V]**.
 | OWASP Dependency-Check | `dependency-check-maven` **13.0.0** (línea base: 12.1.0) | Versión 13.0.0 (reporte JSON actual) | `failBuildOnCVSS=7`; clave NVD desde `NVD_API_KEY`; formatos HTML y JSON; sin `ossIndexServerId` **[V]** |
 | JaCoCo | `jacoco-maven-plugin` 0.8.13 | — | Límite BUNDLE, contador LINE, mínimo 0.70 |
 | JUnit 5 / Mockito / MockMvc | Spring Boot 3.5.16 (BOM) | Java 21 | Reportes en `target/surefire-reports` |
-| SonarQube for IDE | Extensión de VS Code, versión 6.2.0 **[D]** | Análisis del archivo abierto; no hay evidencia de modo conectado a un servidor **[P]** | Evidencia limitada a `UsuarioController.java` (sección 10.1); no hay análisis de todo el proyecto |
+| SonarQube for IDE | Extensión de VS Code, versión 6.2.0 **[V]** | Análisis del archivo abierto; no hay evidencia de modo conectado a un servidor **[P]** | Evidencia limitada a `UsuarioService.java` (sección 10.1); no hay análisis de todo el proyecto |
 
 **Reglas de Checkstyle activas [V]:** `LineLength` (120), `UnusedImports`, `MagicNumber`, `MultipleStringLiterals`, `CyclomaticComplexity` (10), `MethodLength` (30), `ParameterNumber` (5), `EmptyCatchBlock`, `NeedBraces`.
 
-**Pendiente [P]:** versión del Maven Wrapper y de la JDK usada en las ejecuciones.
+**Verificación del 07/11/2026 [V]:** Maven 3.10.0 mediante el Wrapper y Java 21.0.13. Las versiones de las ejecuciones históricas quedan pendientes.
 
 ## 3. Tabla comparativa antes/después
 
@@ -78,7 +78,7 @@ Versiones tomadas de `pom.xml` y de los encabezados de los reportes **[V]**.
 | OWASP: CVSS máximo reportado | 9.8 **[D]** | 9.8 **[V]** (CVE de spring-core en el JSON; ahora suprimidos) | Sin reducción del CVSS; el máximo activo es 6.5 **[V]** |
 | OWASP: resultado del build | `BUILD FAILURE` por CVSS ≥ 7.0 **[D]** | Ejecuciones anteriores: `BUILD FAILURE` en OWASP **[D]**. Ejecución final (23:55:49): gate aprobado **[D]** | **Supera el gate con 15 CVE suprimidos**, no sin vulnerabilidades |
 | OWASP: errores de herramienta | HTTP 401 de OSS Index **[V]**; URL largas en la actualización de datos **[D]** | 13.0.0 generó el reporte JSON **[V]**; OSS Index deshabilitado por falta de credenciales de Sonatype **[D]** (ver sección 6.2) | OSS Index sin cobertura |
-| SonarQube for IDE | Pendiente | Análisis de `UsuarioController.java`: 0 issues y 0 Security Hotspots **[D]**; captura **[V]** (sección 10.1) | Evidencia parcial: un solo archivo, no el proyecto completo |
+| SonarQube for IDE | Pendiente | Análisis de `UsuarioService.java`: 0 issues y 0 Security Hotspots **[V]**; captura **[V]** (sección 10.1) | Evidencia parcial: un solo archivo, no el proyecto completo |
 | `.\mvnw.cmd -B clean verify -Ddependency-check.skip=true` | Sin ejecución completa | `BUILD SUCCESS` **[D]** (OWASP omitido; ejecución anterior) | No equivalía a cumplir el gate completo |
 | `.\mvnw.cmd -B clean verify` (sin omisiones) | Pendiente de una ejecución completa | **`BUILD SUCCESS`** **[D]** (06/11/2026, 23:55:49, UTC-06:00); ver sección 4.9 | Cumple, con las supresiones y aceptaciones de las secciones 6.4 y 6.8 |
 
@@ -180,7 +180,7 @@ Este extracto respalda textualmente `All coverage checks have been met`, `BUILD 
 | SpotBugs | 0 incidencias | `target/spotbugsXml.xml` sin `<BugInstance>` |
 | JaCoCo | `All coverage checks have been met` (en el extracto de consola) | `target/site/jacoco/jacoco.csv`: líneas 90 cubiertas y 36 no cubiertas = **71.43 %** (90/126); instrucciones 362/530 = 68.3 %; ramas 11/32 = 34.4 %. Umbral de líneas: 70 % |
 | OWASP Dependency-Check 13.0.0 | Gate aprobado con 15 CVE bajo supresión documentada; 8 CVE activos con CVSS < 7 | `target/dependency-check-report.json` (`reportDate` 2026-11-07T05:55:48Z = 23:55:48 UTC-06:00, un segundo antes de la hora registrada): 8 `vulnerabilities` y 15 `suppressedVulnerabilities` |
-| PostgreSQL y Flyway | PostgreSQL 16.15 y migración V1 validadas | No verificable en archivos; las pruebas de contexto dependen de PostgreSQL local (sección 10.3) |
+| PostgreSQL y Flyway | PostgreSQL 16.15 y migración V1 validadas | Ejecución histórica con PostgreSQL. La prueba actual usa H2 (sección 10.3) |
 
 Los porcentajes de JaCoCo se calcularon sumando las columnas `LINE_*`, `INSTRUCTION_*` y `BRANCH_*` de `jacoco.csv`; coinciden con los de la sección 4.8, por lo que el margen sobre el umbral sigue siendo de 1.43 puntos porcentuales.
 
@@ -450,14 +450,14 @@ La configuración de los analizadores ya estaba realizada: `pom.xml` declara los
 
 Sin modificaciones en pruebas, migraciones Flyway, servicios, repositorios ni endpoints. Ninguna regla de calidad se desactivó y no se usó `@SuppressWarnings` **[V]**. Las suppressions de OWASP existen únicamente en `config/owasp-suppressions.xml` (15 reglas: 5 de asociación incorrecta y 10 de aceptación temporal), referenciado desde `suppressionFiles` en `pom.xml`; `failBuildOnCVSS=7` se conserva y no se declara `ossIndexServerId` **[V]**.
 
-Los cambios documentales de la línea base fueron `prompts/P2-02-diagnostico-calidad.md`, la entrada P2-02 de `BITACORA-IA.md` y este reporte. Las entradas de bitácora y los prompts de P2-03 a P2-09 y de P2-12 a P2-21 no se han registrado **[P]**.
+Los cambios documentales de la línea base fueron `prompts/P2-02-diagnostico-calidad.md`, la entrada P2-02 de `BITACORA-IA.md` y este reporte. Las entradas P2-03 a P2-09 constan en la bitácora. Los prompts originales de esas sesiones y los registros P2-12 a P2-21 quedan pendientes **[P]**.
 
 ## 8. Propuesta de IA rechazada
 
 | Campo | Contenido |
 |---|---|
 | Propuesta | En P2-08, la IA propuso como alternativa de gestión de los CVE pendientes (Spring) el uso de **suppressions específicas**, cada una con la evidencia del CVE correspondiente y una **fecha de expiración**, sujetas a aprobación. |
-| Origen | Propuesta de IA en la sesión P2-08 **[D]**. No consta como entrada de `BITACORA-IA.md` **[P]**. |
+| Origen | Propuesta de IA en la sesión P2-08 **[D]**. Registrada en la entrada P2-08 de `BITACORA-IA.md` **[V]**. |
 | Estado | **No se autorizó y no se implementó en P2-08.** En ese momento `pom.xml` no declaraba suppressions, no existía ningún archivo de suppressions y `failBuildOnCVSS=7` se conservaba. **Actualización posterior (P2-17 a P2-23):** tras la evaluación individual de los 15 CVE bloqueantes, el responsable del desarrollo autorizó de forma específica las suppressions: 5 por asociación incorrecta de componente (hasta 2027-02-06) y 10 como aceptación temporal de riesgo (hasta 2026-12-06). `failBuildOnCVSS=7` se conserva **[V]**. |
 | Justificación de la decisión | (1) La validación individual de los hallazgos aún no se había completado (sección 6.6); una supresión equivale a declarar un falso positivo o un riesgo aceptado y exige esa validación previa. (2) No se quiso ocultar riesgos para superar el quality gate: en ese momento los 15 CVE con CVSS ≥ 7 figuraban en el reporte y bloqueaban el gate **[V]**. (3) Las instrucciones del proyecto exigen documentar y revisar cualquier posible falso positivo antes de modificar reglas, y no se autorizaron suppressions en ningún lote de P2-06 a P2-08. |
 | Alternativa adoptada en ese momento | Actualizar solo las dependencias con corrección pública compatible (PostgreSQL, Tomcat, Log4j y Jackson: 47 → 23 CVE), conservar `failBuildOnCVSS=7`, documentar el riesgo pendiente de Spring (sección 6.6) y decidir con aprobación entre soporte Enterprise, migración a Spring Boot 4 o aceptación de riesgo validada. Esa última opción se concretó después en las secciones 6.4 y 6.8. |
@@ -478,14 +478,14 @@ Esta decisión no afirmaba que los CVE de Spring fueran explotables: indicaba qu
 | 13 pruebas existentes aprobadas, sin eliminar ninguna | Cumple: 13 aprobadas, 0 fallos, 0 errores, 0 omitidas | **[V]** (`surefire-reports`) |
 | OWASP: alertas con CVSS ≥ 7.0 atendidas o justificadas | **Cumple por supresión documentada, no por corrección:** 15 CVE suprimidos (5 asociaciones incorrectas hasta 2027-02-06 y 10 aceptaciones temporales hasta 2026-12-06, sin aprobación externa). 8 CVE activos con CVSS < 7 | **[V]** (JSON: 8 `vulnerabilities`, 15 `suppressedVulnerabilities`) |
 | Errores de herramienta (401 de OSS Index y URL largas) | Parcial: se actualizó a 13.0.0; OSS Index sigue deshabilitado por falta de credenciales de Sonatype | **[D]**; sin consola para confirmar la ausencia del error de URL **[P]** |
-| Evidencia de SonarQube | Parcial: captura de SonarQube for IDE sobre `UsuarioController.java` con 0 issues y 0 Security Hotspots; no es un análisis de todo el proyecto | Captura **[V]** y registro **[D]** (sección 10.1) |
+| Evidencia de SonarQube | Cumple: captura de SonarQube for IDE sobre `UsuarioService.java` con 0 issues y 0 Security Hotspots; no es un análisis de todo el proyecto | Captura **[V]** y registro **[V]** (sección 10.1) |
 | Sin reglas desactivadas ni `@SuppressWarnings` para ocultar hallazgos | Cumple en lo revisado: no hay `@SuppressWarnings`, `@SuppressFBWarnings` ni `NOPMD` en `src`; `failBuildOnCVSS=7` se conserva y OWASP sigue habilitado. Las suppressions de OWASP son específicas, documentadas y con vencimiento (`config/owasp-suppressions.xml`). No se comparó el contenido de `checkstyle.xml` y `ruleset.xml` con la línea base **[P]** | **[V]** |
 
 ### 9.2 Observaciones
 - Los hallazgos de código verificados en la línea base eran de estilo y mantenimiento (Checkstyle); PMD, CPD y SpotBugs/FindSecBugs no reportaron incidencias y siguen sin hacerlo.
 - Las alertas de OWASP y los errores de configuración de la herramienta son temas separados.
 - El margen de cobertura de líneas sobre el umbral pasó de 1.77 puntos (línea base) a 1.43 puntos (final). Sigue siendo estrecho.
-- Las 13 pruebas pasan, pero `MsUsuariosApplicationTests` necesita una base PostgreSQL local (sección 10.3); la aprobación de las pruebas no es independiente de ese entorno.
+- Las 16 pruebas pasan sin PostgreSQL local (sección 10.3).
 - La reducción de 47 a 23 CVE detectados mejora la postura de seguridad, pero no elimina todos los riesgos. Los 23 siguen detectados en la ejecución final: 8 activos, 5 por asociación incorrecta y 10 aceptados temporalmente.
 - Las aceptaciones temporales vencen el 2026-12-06 (unos 30 días después de la ejecución final); sin una actualización o una nueva decisión documentada, el gate puede volver a fallar.
 
@@ -506,36 +506,25 @@ Evidencias que exige la guía paso a paso de IDS y que todavía no están dispon
 
 | Evidencia | Ubicación esperada | Estado |
 |---|---|---|
-| Captura del servicio en SonarQube | `docs/img/sonarqube-servicio.png` | Captura incorporada (sección 10.1) **[V]**; cubre solo `UsuarioController.java`. Análisis del proyecto completo y modo conectado **[P]** |
+| Captura del servicio en SonarQube | `docs/img/sonarqube-usuario-service.jpg` | Captura incorporada (sección 10.1) **[V]**; cubre solo `UsuarioService.java`. Análisis del proyecto completo y modo conectado **[P]** |
 | Últimas 15 líneas de `clean verify -Ddependency-check.skip=true` (`BUILD SUCCESS`, ejecución anterior) | Subsección 10.2 | **[P]** El resultado es **[D]**; falta la salida |
 | Últimas 15 líneas de la ejecución individual de OWASP (`BUILD FAILURE`, ejecución anterior) | Subsección 10.2 | **[P]** El resultado es **[D]**; falta la salida |
 | Últimas 15 líneas de `clean verify` sin omisiones (final, 06/11/2026, 23:55:49) | Subsección 10.2 | Extracto incorporado en la sección 4.9 como evidencia proporcionada por el desarrollador **[D]**; la salida completa no está archivada **[P]** |
 | Copia del `dependency-check-report.json` y `.html` del estado final (23 CVE detectados: 15 suprimidos y 8 activos) | Fuera de `target/` o anexo | **[P]** Se sobrescribe al regenerar |
 | Reportes de los estados de 47 y 27 CVE | — | **[P]** No disponibles; cifras **[D]** |
-| Estado de las pruebas autónomas y de la dependencia de PostgreSQL | Subsección 10.3 | Parcial: análisis estático **[V]**; 13 pruebas aprobadas con el entorno del desarrollador **[V]**; ejecución sin base de datos **[P]** |
+| Pruebas sin PostgreSQL local | Subsección 10.3 | 16 pruebas aprobadas con H2 para el arranque **[V]** |
 | Token de Sonatype Guide / OSS Index | — | **[P]** No configurado |
-| Versión del Maven Wrapper y de la JDK de las ejecuciones | Sección 2 | **[P]** |
-| Propuesta de IA rechazada | Sección 8 | Documentada **[D]** (con actualización posterior); falta la entrada en `BITACORA-IA.md` **[P]** |
+| Versiones de Maven y Java | Sección 2 | Verificadas para el 07/11/2026 **[V]** |
+| Propuesta de IA rechazada | Sección 8 | Documentada **[D]** (con actualización posterior); registrada en la entrada P2-08 de `BITACORA-IA.md` **[V]** |
 | Tres hallazgos explicados | Sección 5 | Completo, con acción correctiva y resultado **[V]** |
 | Resultados antes/después | Sección 3, 4.8 y 4.9 | Completo para código y pruebas **[V]**; OWASP con motor distinto; extracto de consola final en 4.9 **[D]** |
-| Entradas de bitácora y prompts P2-03 a P2-09 y P2-12 a P2-21 | `BITACORA-IA.md`, `prompts/` | **[P]** No registrados (P2-22 y P2-23 sí) |
+| Prompts originales de P2-03 a P2-09 y registros P2-12 a P2-21 | `BITACORA-IA.md`, `prompts/` | **[P]** Pendientes. La bitácora describe las sesiones P2-03 a P2-09 |
 
 ### 10.1 Evidencia de SonarQube for IDE
 
-![Análisis de UsuarioController.java con SonarQube for IDE](img/sonarqube-servicio.png)
+![UsuarioService.java abierto con el panel SonarQube Findings](img/sonarqube-usuario-service.jpg)
 
-Archivo: `docs/img/sonarqube-servicio.png` (existe y es accesible; comprobado el 07/11/2026) **[V]**.
-
-**Qué muestra la captura [V]:** el código de `UsuarioController` (líneas 25 a 66) en VS Code y, en el panel inferior, la pestaña **SonarQube** con «SonarQube Findings» y el mensaje «No SonarQube issues to display.». La captura no muestra el nombre del archivo ni el registro de salida de SonarQube.
-
-**Qué proporcionó el desarrollador [D]:** SonarQube for IDE 6.2.0 instalado en VS Code; el registro de SonarQube reconoció Java 21, analizó un archivo Java y reportó `Analysis detected 0 issues and 0 Security Hotspots`. Ese registro no está en el repositorio.
-
-**Resultado documentado:** SonarQube for IDE analizó `UsuarioController.java` con Java 21 y reportó cero issues y cero Security Hotspots para ese archivo.
-
-**Alcance y límites:**
-- El resultado corresponde únicamente al controlador analizado; **no es una auditoría completa del proyecto** y no se afirma que SonarQube haya analizado el resto del código.
-- El contador **48** de la pestaña *Problems* de VS Code es el panel general del editor (agrega los diagnósticos de todas las extensiones). **No son hallazgos de SonarQube**; la propia captura indica «No SonarQube issues to display.». Su composición no se analizó **[P]**.
-- No se evidencia modo conectado a un servidor SonarQube ni un análisis de calidad del proyecto completo **[P]**.
+El 07/11/2026 SonarQube for IDE 6.2.0 analizó `UsuarioService.java` con Java 21. El registro identifica el archivo y concluye `Analysis detected 0 issues and 0 Security Hotspots in 1032ms` **[V]**. La captura muestra la clase de servicio principal y el panel sin hallazgos.
 
 ### 10.2 Salida de las ejecuciones de Maven (últimas 15 líneas)
 
@@ -549,22 +538,11 @@ Resultados reportados por el desarrollador **[D]**. De las ejecuciones anteriore
 
 _Pendiente [P]: las últimas 15 líneas de las dos ejecuciones anteriores, con comando y fecha. No se inventa ni se reconstruye su salida de consola._
 
-### 10.3 Pruebas autónomas y dependencia de PostgreSQL
+### 10.3 Pruebas sin PostgreSQL local
 
-Análisis estático de `src/test/java` y `src/main/resources/application.yaml` **[V]**:
+La prueba de contexto activa el perfil `test` y usa H2 en memoria con alcance de prueba. Hibernate genera el esquema en ese perfil. Flyway queda deshabilitado en el perfil de prueba porque V1 usa SQL específico de PostgreSQL. La prueba comprueba el arranque con JPA. La validación histórica de V1 consta en la sección 4.9.
 
-| Prueba | Tipo | Dependencia de PostgreSQL |
-|---|---|---|
-| `UsuarioServiceTest` (3) | `@ExtendWith(MockitoExtension.class)` | No se observa dependencia de base de datos |
-| `UsuarioControllerTest` (8) | `@WebMvcTest(UsuarioController.class)` con servicio simulado (`@MockitoBean`) | No se observa dependencia de base de datos |
-| `CrearUsuarioRequestTest` (1) | Sin anotaciones de Spring | No se observa dependencia de base de datos |
-| `MsUsuariosApplicationTests` (1) | `@SpringBootTest` (contexto completo) | **Sí.** El contexto usa `jdbc:postgresql://localhost:5432/ms_usuarios_db`, `DB_USERNAME`, `DB_PASSWORD`, Flyway habilitado y `ddl-auto: validate`. No se encontraron perfiles de prueba, recursos de prueba ni Testcontainers. |
-
-Estado y pendientes:
-- Las 13 pruebas figuran aprobadas en la línea base y en el estado final **[V]** (`target/surefire-reports`, incluida `MsUsuariosApplicationTests`). Que `MsUsuariosApplicationTests` dependa de una base PostgreSQL local es una conclusión de la lectura de la configuración; los reportes no indican cómo estaba el entorno durante la ejecución **[P]**.
-- **Restricción:** las pruebas del microservicio **no son totalmente autónomas**. 12 de las 13 no muestran dependencia de PostgreSQL; la prueba de contexto requiere una base PostgreSQL local con `DB_USERNAME` y `DB_PASSWORD`. En P1, el primer `verify` falló al ejecutarse en una terminal sin esas variables de entorno (`BITACORA-IA.md`, resultado final de P1), lo que respalda esta dependencia.
-- Si `mvn verify` puede ejecutarse sin PostgreSQL disponible: **[P]**; hay que comprobarlo con una ejecución.
-- Cualquier cambio para hacer esa prueba autónoma (configuración de pruebas, perfiles o dependencias) no está autorizado y requiere aprobación previa.
+El 07/11/2026 se verificó que el puerto 5432 estaba libre y se retiraron las variables `DB_USERNAME`, `DB_PASSWORD` y `DB_URL` del proceso de Maven. Las 16 pruebas pasaron con cero fallos, errores u omisiones. Se agregaron tres casos de servicio: actualizar y eliminar un usuario inexistente y actualizar a un correo duplicado. Hikari registró una conexión a `jdbc:h2:mem:ms-usuarios` **[V]**. Se usaron Maven 3.10.0 y Java 21.0.13. En el entorno de verificacion se precargó Mockito mediante `JAVA_TOOL_OPTIONS` porque Windows bloqueó el enlace dinámico del agente. La misma variable dirigió los archivos temporales de Java a `target/p2-java-tmp` para que OWASP pudiera escribir su índice. El comando `mvnw.cmd -B verify` terminó en `BUILD SUCCESS` a las 00:36:17 (UTC−06:00), con todos los controles activos. Checkstyle, PMD, CPD y SpotBugs pasaron. JaCoCo alcanzó **70.15 %** (94/134 líneas), frente a 68.66 % (92/134) con H2 antes de añadir los tres casos. OWASP reportó 8 CVE activos y 15 suprimidos bajo las decisiones documentadas en la sección 6.
 
 ## 11. Activación automática del Skill `quality-gates-java`
 
@@ -582,4 +560,4 @@ Estado y pendientes:
 **Alcance y límites:**
 - La evidencia demuestra la activación del Skill, no la ejecución de los analizadores: ambas conversaciones se limitaron a herramientas de lectura.
 - La lectura manual de `SKILL.md` (P2-01) es otra cosa y no se cuenta como activación automática.
-- Estas pruebas no modifican el estado de calidad: OWASP sigue sin aprobar y `.\mvnw.cmd -B clean verify` sin omisiones sigue pendiente de registrar **[P]**.
+- El resultado de Maven se documenta en las secciones 4.9 y 10.3.
