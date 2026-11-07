@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.ids.beca.usuarios.domain.RestriccionesUsuario;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
@@ -11,10 +12,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record CrearUsuarioRequest(
-		@NotBlank @Size(max = 120) String nombre,
-		@NotBlank @Email @Size(max = 254) String email,
-		@NotBlank @Size(min = 8) String password) {
+		@NotBlank @Size(max = RestriccionesUsuario.LONGITUD_MAXIMA_NOMBRE) String nombre,
+		@NotBlank @Email @Size(max = RestriccionesUsuario.LONGITUD_MAXIMA_EMAIL) String email,
+		@NotBlank @Size(min = CrearUsuarioRequest.LONGITUD_MINIMA_PASSWORD) String password) {
 
+	private static final int LONGITUD_MINIMA_PASSWORD = 8;
 	private static final int BCRYPT_MAX_BYTES = 72;
 
 	public CrearUsuarioRequest {

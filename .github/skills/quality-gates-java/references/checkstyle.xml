@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="severity" value="warning"/>
+
+    <!-- Longitud máxima por línea -->
+    <module name="LineLength">
+        <property name="max" value="120"/>
+    </module>
+
+    <module name="TreeWalker">
+
+        <!-- Imports sin utilizar -->
+        <module name="UnusedImports"/>
+
+        <!-- Valores numéricos sin constantes -->
+        <module name="MagicNumber"/>
+
+        <!-- Literales de texto repetidos -->
+        <module name="MultipleStringLiterals"/>
+
+        <!-- Complejidad ciclomática máxima -->
+        <module name="CyclomaticComplexity">
+            <property name="max" value="10"/>
+        </module>
+
+        <!-- Longitud máxima de métodos -->
+        <module name="MethodLength">
+            <property name="max" value="30"/>
+        </module>
+
+        <!-- Número máximo de parámetros -->
+        <module name="ParameterNumber">
+            <property name="max" value="5"/>
+        </module>
+
+        <!-- Evitar bloques catch vacíos -->
+        <module name="EmptyCatchBlock"/>
+
+        <!-- Exigir llaves en estructuras de control -->
+        <module name="NeedBraces"/>
+
+    </module>
+</module>

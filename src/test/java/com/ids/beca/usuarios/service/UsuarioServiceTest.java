@@ -3,6 +3,7 @@ package com.ids.beca.usuarios.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -28,6 +29,7 @@ import com.ids.beca.usuarios.dto.ActualizarUsuarioRequest;
 import com.ids.beca.usuarios.dto.CrearUsuarioRequest;
 import com.ids.beca.usuarios.dto.UsuarioResponse;
 import com.ids.beca.usuarios.exception.EmailDuplicadoException;
+import com.ids.beca.usuarios.exception.UsuarioNoEncontradoException;
 import com.ids.beca.usuarios.repository.UsuarioRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -109,4 +111,38 @@ class UsuarioServiceTest {
 		verify(usuarioRepository).saveAndFlush(existente);
 	}
 
+	@Test
+	void actualizarUsuarioInexistenteLanzaExcepcion() {
+		when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
+		ActualizarUsuarioRequest solicitud = new ActualizarUsuarioRequest("Ana Prueba", "ana@example.com");
+
+		assertThatThrownBy(() -> usuarioService.actualizar(1L, solicitud))
+				.isInstanceOf(UsuarioNoEncontradoException.class);
+		verify(usuarioRepository, never()).saveAndFlush(any(Usuario.class));
+	}
+
+	@Test
+	void eliminarUsuarioInexistenteLanzaExcepcion() {
+		when(usuarioRepository.existsById(1L)).thenReturn(false);
+
+		assertThatThrownBy(() -> usuarioService.eliminar(1L))
+				.isInstanceOf(UsuarioNoEncontradoException.class);
+		verify(usuarioRepository, never()).deleteById(1L);
+	}
+
+	@Test
+	void actualizarUsuarioConCorreoDuplicadoLanzaExcepcion() {
+		Usuario existente = new Usuario("Ana Prueba", "ana@example.com", "hash-simulado", Rol.AGENTE);
+		ActualizarUsuarioRequest solicitud = new ActualizarUsuarioRequest("Ana Prueba", "ocupado@example.com");
+		SQLException errorSql = new SQLException("violación de unicidad simulada", "23505");
+		ConstraintViolationException violacion =
+				new ConstraintViolationException("correo duplicado", errorSql, "uq_usuarios_email_lower");
+		DataIntegrityViolationException errorOriginal = new DataIntegrityViolationException("conflicto", violacion);
+		when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
+		when(usuarioRepository.saveAndFlush(existente)).thenThrow(errorOriginal);
+
+		assertThatThrownBy(() -> usuarioService.actualizar(1L, solicitud))
+				.isInstanceOf(EmailDuplicadoException.class)
+				.hasCause(errorOriginal);
+	}
 }
