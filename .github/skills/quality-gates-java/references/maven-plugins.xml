@@ -80,10 +80,17 @@
     <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
-        <version>12.1.0</version>
+        <version>13.0.0</version>
         <configuration>
             <failBuildOnCVSS>7</failBuildOnCVSS>
             <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+            <suppressionFiles>
+                <suppressionFile>config/owasp-suppressions.xml</suppressionFile>
+            </suppressionFiles>
+            <formats>
+                <format>HTML</format>
+                <format>JSON</format>
+            </formats>
         </configuration>
         <executions>
             <execution>

@@ -22,17 +22,17 @@ public class Usuario {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "nombre", nullable = false, length = 120)
+	@Column(name = "nombre", nullable = false, length = RestriccionesUsuario.LONGITUD_MAXIMA_NOMBRE)
 	private String nombre;
 
-	@Column(name = "email", nullable = false, length = 254)
+	@Column(name = "email", nullable = false, length = RestriccionesUsuario.LONGITUD_MAXIMA_EMAIL)
 	private String email;
 
 	@Column(name = "password_hash", nullable = false)
 	private String passwordHash;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "rol", nullable = false, length = 20)
+	@Column(name = "rol", nullable = false, length = RestriccionesUsuario.LONGITUD_MAXIMA_ROL)
 	private Rol rol;
 
 	// Valor asignado por el DEFAULT now() de PostgreSQL; Hibernate lo recupera tras el INSERT.

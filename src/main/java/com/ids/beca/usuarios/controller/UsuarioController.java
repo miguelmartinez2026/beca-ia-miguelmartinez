@@ -51,7 +51,8 @@ public class UsuarioController {
 	}
 
 	@PutMapping("/{id}")
-	public UsuarioResponse actualizar(@PathVariable Long id, @Valid @RequestBody ActualizarUsuarioRequest solicitud) {
+	public UsuarioResponse actualizar(@PathVariable Long id,
+			@Valid @RequestBody ActualizarUsuarioRequest solicitud) {
 		return usuarioService.actualizar(id, solicitud);
 	}
 
