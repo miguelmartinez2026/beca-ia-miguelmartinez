@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.exception.ConstraintViolationException;
@@ -20,6 +21,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -144,5 +146,44 @@ class UsuarioServiceTest {
 		assertThatThrownBy(() -> usuarioService.actualizar(1L, solicitud))
 				.isInstanceOf(EmailDuplicadoException.class)
 				.hasCause(errorOriginal);
+	}
+
+	@Test
+	void listarUsuariosDevuelveRespuestasOrdenadasPorId() {
+		// Arrange: el repositorio entrega los usuarios ya ordenados por ID.
+		Instant fechaCreacion = Instant.parse("2026-11-04T12:00:00Z");
+		Usuario primero = new Usuario("Ana Prueba", "ana@example.com", "hash-ana", Rol.SOLICITANTE);
+		Usuario segundo = new Usuario("Luis Prueba", "luis@example.com", "hash-luis", Rol.AGENTE);
+		ReflectionTestUtils.setField(primero, "id", 1L);
+		ReflectionTestUtils.setField(segundo, "id", 2L);
+		ReflectionTestUtils.setField(primero, "createdAt", fechaCreacion);
+		ReflectionTestUtils.setField(segundo, "createdAt", fechaCreacion);
+		Sort orden = Sort.by(Sort.Direction.ASC, "id");
+		when(usuarioRepository.findAll(orden)).thenReturn(List.of(primero, segundo));
+
+		// Act
+		List<UsuarioResponse> respuestas = usuarioService.listar();
+
+		// Assert
+		assertThat(respuestas).hasSize(2);
+		assertThat(respuestas).extracting(UsuarioResponse::id).containsExactly(1L, 2L);
+		assertThat(respuestas).extracting(UsuarioResponse::email)
+				.containsExactly("ana@example.com", "luis@example.com");
+		verify(usuarioRepository).findAll(orden);
+		verifyNoInteractions(passwordEncoder);
+	}
+
+	@Test
+	void eliminarUsuarioExistenteLlamaDeleteById() {
+		// Arrange
+		when(usuarioRepository.existsById(2L)).thenReturn(true);
+
+		// Act
+		usuarioService.eliminar(2L);
+
+		// Assert
+		verify(usuarioRepository).existsById(2L);
+		verify(usuarioRepository).deleteById(2L);
+		verifyNoInteractions(passwordEncoder);
 	}
 }
