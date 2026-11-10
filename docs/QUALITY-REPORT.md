@@ -1,27 +1,26 @@
 # Reporte de calidad — `ms-usuarios`
 
 **Práctica:** P2 — Calidad como código con instrucciones y skills
-**Estado del documento:** informe final de la Práctica 2 con la línea base y las ejecuciones fallidas anteriores conservadas. **Estado ejecutivo (ejecución final del 06/11/2026, 23:55:49, UTC-06:00):** `.\mvnw.cmd -B clean verify` sin omisiones terminó en **`BUILD SUCCESS`** **[D]**. Checkstyle, PMD, CPD, SpotBugs, JaCoCo y las 13 pruebas cumplen. **OWASP Dependency-Check 13.0.0 aprobó su gate, pero no porque las vulnerabilidades estén corregidas ni porque no existan:** 15 CVE con CVSS ≥ 7 quedan bajo supresión documentada (5 asociaciones incorrectas de componente, con vencimiento 2027-02-06, y 10 aceptaciones temporales de riesgo, con vencimiento 2026-12-06) y 8 CVE con CVSS < 7 siguen activos. Las 10 aceptaciones son una decisión interna del responsable del desarrollo, **sin aprobación de un tercero**, y **no sustituyen** una actualización a versiones corregidas. Al vencer la aceptación (2026-12-06) el gate puede volver a fallar.
-**Fecha de la línea base:** 06/11/2026
-**Fecha de la actualización final:** 06/11/2026 (ejecución final P2-23)
+**Fecha de línea base:** 06/11/2026
+**Última actualización documental:** 09/11/2026
+**Rama de trabajo:** `practica-2`
+**Alcance:** Java 21, Spring Boot 3.5.16, Maven y análisis de calidad de `ms-usuarios`.
 
-> **Resumen de estados de build (no deben confundirse; las dos primeras filas son ejecuciones anteriores):**
->
-> | Ejecución | Resultado | Evidencia |
-> |---|---|---|
-> | `.\mvnw.cmd -B clean verify -Ddependency-check.skip=true` (OWASP omitido), **ejecución anterior** | `BUILD SUCCESS`; no demostraba el gate completo | **[D]** |
-> | Ejecución individual de OWASP Dependency-Check 13.0.0 (umbral CVSS 7), **ejecución anterior, sin suppressions** | `BUILD FAILURE` por CVSS ≥ 7 (23 CVE, 15 con CVSS ≥ 7) | **[D]**; el estado de ese momento ya no está en `target/` (el JSON se regeneró) |
-> | `.\mvnw.cmd -B clean verify` sin omisiones, **ejecución final** (06/11/2026, 23:55:49, UTC-06:00) | **`BUILD SUCCESS`**; 13 pruebas sin fallos, errores ni omitidas; OWASP aprobado con 15 CVE bajo supresión documentada | **[D]** (extracto de consola proporcionado por el desarrollador, sección 4.9); los resultados de los analizadores coinciden con `target/` **[V]** |
+**Estado ejecutivo:** El 09/11/2026 GitHub Actions ejecutó `./mvnw -B verify` en la rama `practica-2` y terminó en **`BUILD SUCCESS`**, con **16 pruebas aprobadas**, cero fallos, cero errores y cero omitidas. La cobertura de líneas más reciente con porcentaje documentado es **70.15 % (94/134)**, obtenida en la verificación local del 07/11/2026 y superior al mínimo de 70 %. La ejecución de CI confirmó que el control de cobertura pasó, aunque su log no publica el porcentaje exacto. Checkstyle, PMD, CPD, SpotBugs/FindSecBugs y OWASP se ejecutaron dentro de Maven. [Evidencia del CI, PR #5](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42716270381).
+
+**Advertencia de seguridad:** el resultado de OWASP **no implica ausencia de vulnerabilidades**. En el análisis local del 09/11/2026 permanecen **23 CVE detectados: 8 activos con CVSS inferior a 7 y 15 suprimidos**. De las supresiones, 5 corresponden a asociaciones incorrectas de componentes y 10 a **aceptaciones temporales de riesgo** que vencen el 06/12/2026; estas diez CVE **no están corregidas**. Al retirarlas en una prueba controlada, OWASP terminó en `BUILD FAILURE` por CVSS de 7.5 a 9.8. Se restauró el archivo original después de la prueba. Las decisiones y la evidencia figuran en las secciones 6.4, 6.8 y 6.9.
+
+> **Lectura de resultados:** se conservan las cifras anteriores exclusivamente como **historial** para mostrar la evolución. El estado funcional más reciente es de **16 pruebas y 70.15 % de cobertura de líneas**; los datos históricos de 13 pruebas y 71.43 % corresponden a la ejecución del 06/11/2026, antes de añadir tres casos negativos.
 
 ## Convención de evidencia
 
 | Marca | Significado |
 |---|---|
-| **[V]** | Verificado directamente en archivos del repositorio. |
-| **[D]** | Proporcionado por el desarrollador; no se pudo comprobar con los archivos disponibles. |
+| **[V]** | Dato contrastado con archivo de código, reporte de analizador, registro de GitHub Actions o salida reproducible que se indica. |
+| **[D]** | Dato aportado por el desarrollador o conservado del historial, sin registro completo disponible en el repositorio. |
+| **[P]** | Verificación o corrección pendiente. |
 
-Los resultados marcados **[V]** en las secciones finales se leyeron de `target/` el 06/11/2026; el reporte de OWASP se regeneró en cada ejecución, por lo que solo el último estado (el de la ejecución final: 23 CVE detectados, 15 suprimidos y 8 activos) es verificable en archivos. Los estados anteriores (47, 27 y 23 CVE sin suppressions) se conservan como historial **[D]**.
-| **[P]** | Pendiente. |
+El reporte combina la línea base del 06/11, una ejecución local ampliada del 07/11 y el CI y las pruebas controladas de OWASP del 09/11. No se deben atribuir métricas de una fecha a otra. Los archivos generados en `target/` pueden sobrescribirse al volver a ejecutar Maven; los registros de CI quedan disponibles en GitHub.
 
 ## 1. Objetivo y alcance
 
@@ -34,8 +33,8 @@ Los resultados marcados **[V]** en las secciones finales se leyeron de `target/`
 
 **Fuera de alcance:**
 - JWT y autorización por roles (corresponden a P3).
-- Migración a Spring Boot 4 / Spring Framework 7 (descartada en esta práctica; ver sección 6.6).
-- Actualización de Spring Framework, Spring Security y Spring Data (sus correcciones compatibles requieren soporte Enterprise).
+- Migración a Spring Boot 4 / Spring Framework 7 (descartada en esta práctica; ver §6.9).
+- Incorporar versiones comerciales Enterprise de Spring sin disponer de soporte o credenciales; se registran como alternativa no aplicada, no como corrección realizada.
 
 **Nota histórica:** la versión de la línea base declaraba como fuera de alcance «correcciones de código y actualizaciones de dependencias (no aplicadas)». Esa afirmación era válida el 06/11/2026 en el diagnóstico inicial; los lotes aplicados después se documentan en la sección 7.3.
 
@@ -59,28 +58,27 @@ Versiones tomadas de `pom.xml` y de los encabezados de los reportes **[V]**.
 
 **Verificación del 07/11/2026 [V]:** Maven 3.10.0 mediante el Wrapper y Java 21.0.13. Las versiones de las ejecuciones históricas quedan pendientes.
 
-## 3. Tabla comparativa antes/después
+## 3. Comparación antes y después
 
-| Herramienta | Antes (línea base) | Después (estado final) | Estado |
+La columna «Antes» describe la **línea base del 06/11/2026**. La columna «Estado más reciente» reúne la verificación local ampliada del 07/11 y los controles comprobados en CI el 09/11; se indica cuando una métrica no fue recalculada.
+
+| Herramienta o control | Antes (06/11, línea base) | Estado más reciente y evidencia | Evaluación |
 |---|---|---|---|
-| Checkstyle | 19 violaciones (8 MagicNumber, 7 LineLength, 4 MultipleStringLiterals) **[V]** | 0 violaciones **[V]** (`target/checkstyle-result.xml` sin entradas de error) | Cumple |
-| PMD | 0 violaciones **[V]** | 0 violaciones **[V]** | Cumple |
-| CPD | 0 duplicaciones **[V]** | 0 duplicaciones **[V]** | Cumple |
-| SpotBugs/FindSecBugs | 0 incidencias **[V]** | 0 incidencias **[V]** | Cumple |
-| JaCoCo (líneas) | 71.77 % (89/124); umbral 70 % **[V]** | 71.43 % (90/126); umbral 70 % **[V]** | Cumple; margen de 1.43 puntos |
-| JaCoCo (instrucciones, informativo) | 68.3 % (362/530) **[V]** | 68.3 % (362/530) **[V]** | No es la métrica del umbral |
-| Pruebas | 13 aprobadas, 0 fallos, 0 errores **[V]** | 13 aprobadas, 0 fallos, 0 errores, 0 omitidas **[V]** | Cumple |
-| OWASP: dependencias escaneadas | 71 (49 únicas) **[V]** (12.1.0) | No registrado para 13.0.0 | Pendiente **[P]** |
-| OWASP: dependencias con alertas | 10 **[V]** (12.1.0) | 3 (spring-core, spring-security-crypto, spring-data-jpa) **[V]** (13.0.0) | Mejora; no comparable directamente (motor distinto) |
-| OWASP: asociaciones dependencia-CVE | 70 **[V]** (12.1.0) | 23 **[V]** (13.0.0) | No equivale a CVE únicos |
-| OWASP: CVE | No determinado en la línea base | 47 → 27 → 23 (ver sección 6.4); 47 y 27 **[D]**, 23 **[V]**. Ejecución final: 23 detectados = 15 suprimidos + 8 activos **[V]** | Persisten alertas: 8 activas y 15 bajo supresión |
-| OWASP: CVE con CVSS ≥ 7 | Pendiente en la línea base | 15 **[V]** (12 en spring-core y 3 en spring-security-crypto); en la ejecución final los 15 figuran como suprimidos, no como corregidos **[V]** | Gate aprobado por supresión documentada (5 asociaciones incorrectas + 10 aceptaciones temporales) |
-| OWASP: CVSS máximo reportado | 9.8 **[D]** | 9.8 **[V]** (CVE de spring-core en el JSON; ahora suprimidos) | Sin reducción del CVSS; el máximo activo es 6.5 **[V]** |
-| OWASP: resultado del build | `BUILD FAILURE` por CVSS ≥ 7.0 **[D]** | Ejecuciones anteriores: `BUILD FAILURE` en OWASP **[D]**. Ejecución final (23:55:49): gate aprobado **[D]** | **Supera el gate con 15 CVE suprimidos**, no sin vulnerabilidades |
-| OWASP: errores de herramienta | HTTP 401 de OSS Index **[V]**; URL largas en la actualización de datos **[D]** | 13.0.0 generó el reporte JSON **[V]**; OSS Index deshabilitado por falta de credenciales de Sonatype **[D]** (ver sección 6.2) | OSS Index sin cobertura |
-| SonarQube for IDE | Pendiente | Análisis de `UsuarioService.java`: 0 issues y 0 Security Hotspots **[V]**; captura **[V]** (sección 10.1) | Evidencia parcial: un solo archivo, no el proyecto completo |
-| `.\mvnw.cmd -B clean verify -Ddependency-check.skip=true` | Sin ejecución completa | `BUILD SUCCESS` **[D]** (OWASP omitido; ejecución anterior) | No equivalía a cumplir el gate completo |
-| `.\mvnw.cmd -B clean verify` (sin omisiones) | Pendiente de una ejecución completa | **`BUILD SUCCESS`** **[D]** (06/11/2026, 23:55:49, UTC-06:00); ver sección 4.9 | Cumple, con las supresiones y aceptaciones de las secciones 6.4 y 6.8 |
+| Checkstyle | 19 violaciones: 8 `MagicNumber`, 7 `LineLength`, 4 `MultipleStringLiterals` | 0 violaciones; CI 09/11 confirmó el paso de `checkstyle:check` **[V]** | Corregido |
+| PMD | 0 violaciones | Sin infracciones bloqueantes; CI `verify` exitoso **[V]** | Cumple |
+| CPD | 0 duplicaciones sobre el umbral de 80 tokens | Sin duplicaciones bloqueantes; CI `verify` exitoso **[V]** | Cumple |
+| SpotBugs / FindSecBugs | 0 incidencias | Control superado en CI **[V]** | Cumple |
+| JaCoCo — líneas (umbral ≥ 70 %) | 71.77 % (89/124) **[V]** | **70.15 % (94/134)** en prueba local del 07/11 **[D]**; gate aprobado en CI el 09/11 **[V]** | Cumple, con margen de 0.15 puntos porcentuales |
+| JaCoCo — instrucciones y ramas | 68.3 % de instrucciones; 34.4 % de ramas **[V]** | No se conserva un desglose actualizado del 07/11 o del CI; no se extrapolan las cifras históricas | Informativo |
+| Pruebas automatizadas | 13 aprobadas, 0 fallos **[V]** | **16 aprobadas, 0 fallos, 0 errores, 0 omitidas**, comprobadas en [CI del 09/11](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42716270381) **[V]** | Cumple |
+| OWASP — dependencias afectadas | 10 dependencias con alertas en Dependency-Check 12.1.0 (71 escaneadas, 49 únicas) **[V]** | 3 con CVE identificadas en el reporte 13.0.0 del 09/11: `spring-core`, `spring-data-jpa`, `spring-security-crypto` **[V]** | Hay vulnerabilidades pendientes |
+| OWASP — CVE detectados | 70 asociaciones dependencia-CVE en la línea base; no son 70 CVE únicos | **23 CVE detectados**: 8 activos + 15 suprimidos, según JSON del 09/11 **[V]** | Persisten riesgos |
+| OWASP — supresiones | 0 en la línea base | 5 asociaciones de módulo incorrectas + 10 aceptaciones temporales. La ejecución sin estas últimas falló por 10 CVE con CVSS ≥ 7 **[V]** | Observación del instructor pendiente de aprobación |
+| OWASP — gate de Maven | `BUILD FAILURE` antes de gestionar CVE **[D]** | `BUILD SUCCESS` con 15 supresiones; `BUILD FAILURE` con solo 5, en prueba local del 09/11 **[D]** | Aprobación condicionada por supresiones |
+| SonarQube for IDE | Sin captura al inicio | Captura en `docs/img/sonarqube-usuario-service.jpg`, sobre `UsuarioService.java` **[V]** | Evidencia del archivo solicitado |
+| Integración continua | Sin workflow | `.github/workflows/ci.yml`; CI verde en `practica-2` el 09/11, ejecutando `verify` sin opción de omitir OWASP **[V]** | Incorporado |
+
+**Nota histórica:** el 06/11, tras corregir los hallazgos de Checkstyle y antes de ampliar los tests, se registraron **13 pruebas y 71.43 % (90/126 líneas)**. Son resultados intermedios, no el estado final. El histórico de OWASP pasó de 47 a 27 y luego a 23 CVE según las ejecuciones descritas en la sección 6.4, con limitaciones de conservación de sus reportes.
 
 ## 4. Resultados iniciales por herramienta
 
@@ -118,114 +116,72 @@ El umbral de 70 % se aplica a líneas. Clases con menor cobertura de líneas: `A
 ### 4.6 Pruebas **[V]** (`target/surefire-reports`)
 13 pruebas aprobadas, 0 fallos, 0 errores, 0 omitidas: `UsuarioControllerTest` (8), `UsuarioServiceTest` (3), `CrearUsuarioRequestTest` (1) y `MsUsuariosApplicationTests` (1).
 
-### 4.7 Procedencia de los resultados
-Los reportes corresponden a ejecuciones distintas (por ejemplo, PMD y CPD a las 18:06 y OWASP a las 18:53) en la línea base. La ejecución completa de `.\mvnw.cmd -B clean verify` del 06/11/2026, 23:55:49 consolidó el estado final (sección 4.9), donde se incorpora el extracto final de consola proporcionado por el desarrollador **[D]**; la salida completa no está archivada **[P]**.
+### 4.7 Procedencia y cronología de los resultados
 
-### 4.8 Resultados finales (06/11/2026)
+La línea base del 06/11 se tomó de reportes de `target/` producidos durante el diagnóstico inicial. Las correcciones de estilo eliminaron las 19 violaciones de Checkstyle. La ejecución local completa del 06/11 pasó con 13 pruebas y 71.43 % de líneas, pero quedó superada por las tres pruebas negativas incorporadas después.
 
-| Herramienta | Resultado final | Fuente |
+El 07/11 se ejecutó `mvnw.cmd -B verify` con el perfil H2 para la prueba de contexto, sin PostgreSQL local, y se registraron **16 pruebas y 70.15 % de cobertura de líneas (94/134)**. El 09/11 GitHub Actions ejecutó de nuevo `./mvnw -B verify`, confirmó las **16 pruebas** y terminó en `BUILD SUCCESS`, con todos los controles Maven activos. El porcentaje exacto de JaCoCo procede de la ejecución local; el CI confirmó `All coverage checks have been met`.
+
+### 4.8 Resultados actuales comprobables (09/11/2026)
+
+| Control | Estado | Fuente |
 |---|---|---|
-| Checkstyle | 0 violaciones | `target/checkstyle-result.xml` **[V]** |
-| PMD | 0 violaciones | `target/pmd.xml` **[V]** |
-| CPD | 0 duplicaciones | `target/cpd.xml` **[V]** |
-| SpotBugs/FindSecBugs | 0 incidencias | `target/spotbugsXml.xml` **[V]** |
-| Pruebas | 13 aprobadas (`UsuarioControllerTest` 8, `UsuarioServiceTest` 3, `CrearUsuarioRequestTest` 1, `MsUsuariosApplicationTests` 1) | `target/surefire-reports` **[V]** |
-| JaCoCo | Líneas 71.43 % (90/126); instrucciones 68.3 % (362/530); ramas 34.4 % (11/32) | `target/site/jacoco/jacoco.csv` **[V]** |
-| OWASP | 23 CVE en 3 dependencias; 15 con CVSS ≥ 7 (estado **anterior** a las suppressions, que llevó al `BUILD FAILURE`). En la ejecución final siguen detectados los 23, de los cuales 15 están suprimidos y 8 activos con CVSS < 7 (sección 6.4) | `target/dependency-check-report.json` (13.0.0, generado el 06/11/2026, 23:55:48 UTC-06:00) **[V]** |
+| Checkstyle | 0 violaciones | Log del [CI del PR #5](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42716270381) **[V]** |
+| PMD y CPD | Gates aprobados | `mvn verify` en CI **[V]** |
+| SpotBugs / FindSecBugs | Gate aprobado | `mvn verify` en CI **[V]** |
+| Pruebas | **16 aprobadas**: `UsuarioControllerTest` (8), `UsuarioServiceTest` (6), `CrearUsuarioRequestTest` (1) y `MsUsuariosApplicationTests` (1). Sin fallos, errores ni omitidas | Log del CI del 09/11 **[V]** |
+| JaCoCo | **70.15 % (94/134 líneas)** en la verificación local del 07/11. La regla mínima del 70 % también pasó en CI el 09/11 | §10.3 **[D]** y log del CI **[V]** |
+| OWASP Dependency-Check 13.0.0 | `BUILD SUCCESS` con 15 supresiones en el análisis local del 09/11 a las 17:12:06; `BUILD FAILURE` con solo 5 supresiones a las 17:34:12 | Salidas locales del 09/11, detalle §6.9 **[D]** |
+| CI completo | **`BUILD SUCCESS`**, workflow `ci-miguel`, commit `2881056` | [Run #42716270381](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42716270381) **[V]** |
 
-Cobertura de líneas por clase con menor porcentaje: `ApiExceptionHandler` (15/36) y `UsuarioService` (23/35). La clase `RestriccionesUsuario` (solo constantes) no aparece en `jacoco.csv`. Frente a la línea base (71.77 %, 89/124), el estado final tiene 1 línea cubierta y 1 no cubierta más (90/126); el número de líneas de `ApiExceptionHandler` pasó de 34 a 36 (14 → 15 cubiertas). No se analizó la causa de cada línea adicional; el porcentaje se toma únicamente de `jacoco.csv`.
+La composición del reporte OWASP con las supresiones originales sigue siendo de **23 CVE detectados**, distribuidos en **15 suprimidos y 8 activos**. Los diez CVE temporalmente aceptados están pendientes de corrección de versión. La prueba con cinco supresiones se hizo localmente; después se restauró el XML original.
 
-**Resultados de build (distintos entre sí; las dos primeras filas son ejecuciones anteriores):**
+### 4.9 Evidencia histórica del 06/11 y verificación posterior
 
-| Ejecución | Resultado | Evidencia |
-|---|---|---|
-| `.\mvnw.cmd -B clean verify -Ddependency-check.skip=true` (anterior) | `BUILD SUCCESS`; 13 pruebas y umbral JaCoCo satisfechos. OWASP **omitido**. | **[D]**; los resultados de cada analizador coinciden con los archivos de `target/` **[V]** |
-| Ejecución individual de OWASP 13.0.0 (`failBuildOnCVSS=7`), anterior y sin suppressions | `BUILD FAILURE`: 15 CVE alcanzan CVSS ≥ 7 | **[D]**; los CVE están en el JSON **[V]** (hoy como suprimidos) |
-| `.\mvnw.cmd -B clean verify` sin omisiones (**final**, 06/11/2026, 23:55:49, UTC-06:00) | **`BUILD SUCCESS`** (sección 4.9) | **[D]**; extracto de consola con `BUILD SUCCESS` en la sección 4.9 (proporcionado por el desarrollador, no archivado como log) |
-
-El `BUILD SUCCESS` con OWASP omitido **no** demostraba que el quality gate completo se cumpliera; el `BUILD SUCCESS` final sí incluye OWASP, con las supresiones descritas en las secciones 6.4 y 6.8.
-
-### 4.9 Ejecución final de Maven (P2-23)
-
-**Comando:** `.\mvnw.cmd -B clean verify` (sin parámetros para omitir controles). **Fecha de finalización:** 06/11/2026, 23:55:49 (UTC-06:00). No se ejecutó Maven al redactar este informe.
-
-**Evidencia textual de consola (P2-24).** Las 15 últimas líneas de la salida, transcritas sin cambios, fueron **proporcionadas por el desarrollador [D]**. No proceden de un archivo de log almacenado en el repositorio ni de `target/`; la salida completa de la ejecución no está archivada **[P]**.
+El 06/11/2026 a las 23:55:49 (UTC−06:00) se registró un `clean verify` satisfactorio **antes de ampliar las pruebas**. Se conserva su extracto para trazabilidad; **no es la última verificación funcional**.
 
 ```text
-[INFO]
 [INFO] --- jacoco:0.8.13:report (report) @ ms-usuarios ---
 [INFO] Loading execution data file C:\Users\migue\Documents\Proyectos\MS-Users\beca-ia-miguelmartinez\target\jacoco.exec
 [INFO] Analyzed bundle 'ms-usuarios' with 12 classes
-[INFO]
 [INFO] --- jacoco:0.8.13:check (check) @ ms-usuarios ---
-[INFO] Loading execution data file C:\Users\migue\Documents\Proyectos\MS-Users\beca-ia-miguelmartinez\target\jacoco.exec
-[INFO] Analyzed bundle 'ms-usuarios' with 12 classes
 [INFO] All coverage checks have been met.
-[INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  45.008 s
+[INFO] Total time: 45.008 s
 [INFO] Finished at: 2026-11-06T23:55:49-06:00
-[INFO] ------------------------------------------------------------------------
 ```
 
-Este extracto respalda textualmente `All coverage checks have been met`, `BUILD SUCCESS`, la duración (45.008 s) y la finalización a las 23:55:49 (UTC-06:00). **No muestra** las fases de pruebas, Checkstyle, PMD, CPD, SpotBugs ni OWASP; esos resultados se sustentan en lo informado por el desarrollador **[D]** y en los reportes de `target/` **[V]** de la tabla siguiente. Las 12 clases analizadas por JaCoCo coinciden con las 12 filas de `jacoco.csv` **[V]**.
+El 07/11 se verificó la ejecución con H2 (sección 10.3). El 09/11 el log de GitHub Actions comprobó **16 pruebas, 0 fallos, 0 errores y 0 omitidas**, además de `All coverage checks have been met` y `BUILD SUCCESS`. Esta última evidencia está disponible en GitHub sin depender de un extracto de consola local.
 
-| Control | Resultado reportado **[D]** | Contraste con archivos de `target/` **[V]** |
-|---|---|---|
-| Build | `BUILD SUCCESS` (extracto de consola de esta sección) | No verificable en archivos; respaldado solo por el extracto proporcionado por el desarrollador **[D]** |
-| Pruebas | 13 ejecutadas, 0 fallos, 0 errores, 0 omitidas | `target/surefire-reports`: 3 + 1 + 1 + 8 = 13 pruebas, 0 fallos, 0 errores, 0 omitidas |
-| Checkstyle | 0 violaciones | `target/checkstyle-result.xml` sin entradas `<error>` |
-| PMD y CPD | Ejecución satisfactoria | `target/pmd.xml` sin `<violation>`; `target/cpd.xml` sin `<duplication>` |
-| SpotBugs | 0 incidencias | `target/spotbugsXml.xml` sin `<BugInstance>` |
-| JaCoCo | `All coverage checks have been met` (en el extracto de consola) | `target/site/jacoco/jacoco.csv`: líneas 90 cubiertas y 36 no cubiertas = **71.43 %** (90/126); instrucciones 362/530 = 68.3 %; ramas 11/32 = 34.4 %. Umbral de líneas: 70 % |
-| OWASP Dependency-Check 13.0.0 | Gate aprobado con 15 CVE bajo supresión documentada; 8 CVE activos con CVSS < 7 | `target/dependency-check-report.json` (`reportDate` 2026-11-07T05:55:48Z = 23:55:48 UTC-06:00, un segundo antes de la hora registrada): 8 `vulnerabilities` y 15 `suppressedVulnerabilities` |
-| PostgreSQL y Flyway | PostgreSQL 16.15 y migración V1 validadas | Ejecución histórica con PostgreSQL. La prueba actual usa H2 (sección 10.3) |
+## 5. Tres hallazgos de Checkstyle: qué ocurría y cómo se resolvió
 
-Los porcentajes de JaCoCo se calcularon sumando las columnas `LINE_*`, `INSTRUCTION_*` y `BRANCH_*` de `jacoco.csv`; coinciden con los de la sección 4.8, por lo que el margen sobre el umbral sigue siendo de 1.43 puntos porcentuales.
+### 5.1 Números mágicos en los límites de usuarios (`MagicNumber`)
 
-**Qué demuestra y qué no:** el gate de OWASP se aprobó porque 15 CVE tienen una supresión vigente; **no** porque estén corregidos ni porque el proyecto no tenga vulnerabilidades. Quedan 8 CVE activos por debajo del umbral y las 10 aceptaciones temporales vencen el 2026-12-06.
+**Antes:** encontré ocho infracciones en `Usuario.java`, `CrearUsuarioRequest.java` y `ActualizarUsuarioRequest.java`. Los valores 120, 254, 20 y 8 aparecían directamente en anotaciones de persistencia o validación. Aunque los límites eran correctos, no quedaba claro que debían conservar la misma definición que las columnas `VARCHAR` de Flyway V1, lo cual aumentaba el riesgo de introducir inconsistencias al mantener el código.
 
-## 5. Hallazgos relevantes de Checkstyle
+**Corrección que aprobé:** centralicé las longitudes compartidas en `domain/RestriccionesUsuario.java`: nombre 120, correo 254 y rol 20. El mínimo de ocho caracteres para contraseña quedó como constante privada del DTO correspondiente. Comprobé que los valores no cambiaron y que la migración V1 se mantuvo intacta.
 
-### Hallazgo 1 — MagicNumber (8 violaciones, 3 archivos)
+**Resultado:** ocho infracciones eliminadas sin cambiar las reglas de negocio ni el esquema. Las pruebas posteriores siguieron aprobando.
 
-| Aspecto | Detalle |
-|---|---|
-| Ubicación | `Usuario.java` (líneas 25, 28, 35: 120, 254, 20); `CrearUsuarioRequest.java` (14, 15, 16: 120, 254, 8); `ActualizarUsuarioRequest.java` (10, 11: 120, 254) |
-| Problema | Los límites de longitud están escritos como literales en anotaciones de JPA y de validación. Los valores 120 y 254 se repiten en tres archivos. |
-| Impacto | Riesgo de que los límites se desincronicen entre la entidad, los DTOs y el esquema. Hoy coinciden con `VARCHAR(120)`, `VARCHAR(254)` y `VARCHAR(20)` de `V1__create_usuarios.sql` **[V]**. Es un riesgo de mantenimiento, no un defecto funcional. |
-| Corrección propuesta en la línea base **[P]** | Reemplazar los literales por constantes con nombre, sin cambiar los valores ni el comportamiento. No se modifica la migración Flyway. Si se crea una clase de constantes, requiere aprobación. |
-| **Acción correctiva aplicada (P2-05) [V]** | Se creó `domain/RestriccionesUsuario.java` con `LONGITUD_MAXIMA_NOMBRE = 120`, `LONGITUD_MAXIMA_EMAIL = 254` y `LONGITUD_MAXIMA_ROL = 20`, y se usaron en `Usuario.java`, `CrearUsuarioRequest.java` y `ActualizarUsuarioRequest.java`. El mínimo de contraseña (8) quedó como constante privada `LONGITUD_MINIMA_PASSWORD` del propio record. Aprobada por el desarrollador (alternativa 3). |
-| Resultado | 8 → 0 violaciones de MagicNumber **[V]**. Los valores coinciden con `VARCHAR(120)`, `VARCHAR(254)` y `VARCHAR(20)` de `V1__create_usuarios.sql`, que no se modificó. Las 13 pruebas siguen aprobadas **[V]**. |
+### 5.2 Cadenas repetidas en el manejo de errores (`MultipleStringLiterals`)
 
-### Hallazgo 2 — MultipleStringLiterals (4 violaciones, 1 archivo)
+**Antes:** `ApiExceptionHandler.java` repetía mensajes y claves del cuerpo de error, como `errors`, `campo`, `mensaje` y «La solicitud contiene datos inválidos.». Esto podía producir respuestas `ProblemDetail` inconsistentes si en una modificación futura se cambiaba solo una aparición.
 
-| Aspecto | Detalle |
-|---|---|
-| Ubicación | `ApiExceptionHandler.java`, líneas 49-51: `"La solicitud contiene datos inválidos."`, `"errors"`, `"campo"`, `"mensaje"`, cada uno repetido 2 veces |
-| Problema | Los mismos textos y claves del cuerpo de error se escriben más de una vez. |
-| Impacto | Riesgo de inconsistencias en el contrato de errores (`ProblemDetail`) si se edita solo una de las apariciones. |
-| Corrección propuesta en la línea base **[P]** | Extraer constantes privadas con los mismos valores, sin alterar mensajes ni claves de las respuestas HTTP. |
-| **Acción correctiva aplicada (P2-04) [V]** | En `ApiExceptionHandler.java` se declararon `MENSAJE_DATOS_INVALIDOS = "La solicitud contiene datos inválidos."`, `ERRORS_PROPERTY = "errors"`, `CLAVE_CAMPO = "campo"` y `CLAVE_MENSAJE = "mensaje"`, con los mismos valores originales. |
-| Resultado | 4 → 0 violaciones de MultipleStringLiterals **[V]**. Textos, claves JSON y códigos HTTP sin cambios; las 13 pruebas siguen aprobadas **[V]**. |
+**Corrección que aprobé:** extraje las cuatro cadenas a constantes privadas de la misma clase. No cambié los textos públicos, las claves JSON ni los códigos HTTP.
 
-### Hallazgo 3 — LineLength (7 violaciones, 2 archivos)
+**Resultado:** cuatro infracciones eliminadas y el contrato de errores preservado.
 
-| Aspecto | Detalle |
-|---|---|
-| Ubicación | `ApiExceptionHandler.java` (líneas 51, 67, 70, 72, 98, 105; de 122 a 132 caracteres) y `UsuarioController.java` (línea 54; 122 caracteres) |
-| Problema | Líneas por encima del límite de 120 caracteres. Los archivos usan tabuladores; los conteos reportados son consistentes con tabuladores computados como 8 columnas (por ejemplo, la línea 98 de `ApiExceptionHandler.java` y la 54 del controlador). |
-| Impacto | Legibilidad y mantenimiento. Sin impacto funcional ni de seguridad. |
-| Corrección propuesta en la línea base **[P]** | Reformatear las líneas, sin cambiar lógica ni textos. |
-| **Acción correctiva aplicada (P2-04) [V]** | Se reformatearon las 6 líneas de `ApiExceptionHandler.java` y la línea 54 de `UsuarioController.java`, sin cambiar lógica, rutas ni textos. |
-| Resultado | 7 → 0 violaciones de LineLength **[V]**. Con las tres reglas, Checkstyle pasó de 19 a 0 violaciones. |
+### 5.3 Líneas demasiado largas (`LineLength`)
 
-Los tres hallazgos de esta sección son de estilo y mantenimiento. Los hallazgos de seguridad de dependencias (OWASP) se tratan en la sección 6.
+**Antes:** Checkstyle señaló siete líneas que excedían 120 columnas, seis en `ApiExceptionHandler.java` y una en `UsuarioController.java`. Dificultaban leer las llamadas y expresiones completas y hacían fallar el gate de estilo.
+
+**Corrección que aprobé:** dividí las expresiones en varias líneas, manteniendo el mismo orden, argumentos y comportamiento.
+
+**Resultado:** siete infracciones eliminadas. En conjunto, los tres lotes redujeron Checkstyle de **19 a 0 violaciones**. No se modificaron rutas REST ni se desactivaron reglas para conseguirlo.
 
 ## 6. Alertas de OWASP y limitaciones del análisis
 
-Las secciones 6.1 a 6.3 conservan la lectura de la **línea base** con Dependency-Check 12.1.0. El estado final con 13.0.0 está en las secciones 6.4 a 6.7.
+Las secciones 6.1 a 6.3 conservan la **línea base** con Dependency-Check 12.1.0. Las secciones 6.4 a 6.8 documentan el análisis con 13.0.0 y las decisiones tomadas el 06/11; la sección **6.9** añade la revalidación del 09/11, posterior a la retroalimentación del instructor.
 
 ### 6.1 Alertas de dependencias (línea base)
 Datos del encabezado de `target/dependency-check-report.html` (Dependency-Check 12.1.0) **[V]**:
@@ -244,7 +200,7 @@ Métrica reportada por la consola de OWASP:
 | CVSS máximo reportado | 9.8 **[D]** | 9.8 **[V]** (13.0.0; CVE de spring-core en el JSON) |
 
 - Los 70 son asociaciones dependencia-CVE, no CVE únicos. Un mismo CVE puede aparecer asociado a varias dependencias. El número de CVE únicos de la línea base quedó **[P]**; las cifras del estado final están en la sección 6.4.
-- El CVSS máximo de 9.8 lo proporcionó el desarrollador a partir de la consola de OWASP **[D]**. En el reporte final (13.0.0) hay 5 CVE de spring-core con 9.8 **[V]**.
+- El CVSS máximo de 9.8 lo proporcionó el desarrollador a partir de la consola de OWASP **[D]**. En el reporte de Dependency-Check 13.0.0 hay 5 CVE de `spring-core` con CVSS 9.8 **[V]**.
 - Una alerta de OWASP indica una coincidencia entre una dependencia y un identificador conocido. **No demuestra que el microservicio sea explotable**, ni siquiera con un CVSS alto. Cada alerta requiere triage: versión realmente afectada, ruta de ejecución y posible falso positivo.
 - En el HTML se observan referencias a avisos de seguridad de Spring (`CVE-2026-59314`, `CVE-2026-47834` y `CVE-2026-59276`). No se confirmó la dependencia asociada ni el CVSS de cada una.
 - El resultado `BUILD FAILURE` por vulnerabilidades con CVSS ≥ 7.0 es un dato proporcionado por el desarrollador **[D]**. No hay consola en el repositorio para verificarlo.
@@ -273,7 +229,7 @@ Métrica reportada por la consola de OWASP:
 |---|---|---|---|---|
 | Primer escaneo con 13.0.0 | 47 | 7 | — | **[D]** |
 | Tras `postgresql.version=42.7.14` y `tomcat.version=10.1.61` | 27 | 5 | −20 | **[D]** |
-| Tras `log4j2.version=2.25.5` y `jackson-bom.version=2.21.5` | 23 | 3 | −4 | **[V]** (`target/dependency-check-report.json`, 06/11/2026) |
+| Tras `log4j2.version=2.25.5` y `jackson-bom.version=2.21.5` | 23 | 3 | −4 | **[V]** (`target/dependency-check-report.json` de la ejecución del 06/11/2026) |
 
 Reducción acumulada: 47 → 23 CVE (−24) detectados. Composición del estado de 23 CVE **[V]** (anterior a las suppressions, que llevó al `BUILD FAILURE`):
 
@@ -288,7 +244,7 @@ Reducción acumulada: 47 → 23 CVE (−24) detectados. Composición del estado 
 - Los CVSS corresponden a los valores del reporte (NVD). Pueden diferir de la severidad del proveedor.
 - **La reducción de 47 a 23 no elimina todos los riesgos de seguridad:** se detectaron 23 alertas, 15 de ellas bloqueantes antes de las suppressions, y OSS Index no está activo.
 
-**Estado de los 23 CVE en la ejecución final (06/11/2026, 23:55:49)** **[V]** (`target/dependency-check-report.json`: 8 `vulnerabilities` y 15 `suppressedVulnerabilities`). Las tres categorías son distintas y no deben mezclarse:
+**Composición de los 23 CVE confirmada en el reporte local del 09/11/2026** **[V]** (JSON: 8 entradas `vulnerabilities` y 15 `suppressedVulnerabilities`). La misma distribución ya se había registrado el 06/11. Las tres categorías son distintas y no deben mezclarse:
 
 | Categoría | CVE | Dependencia / módulo en el JSON | CVSS | Tratamiento | Vencimiento |
 |---|---|---|---|---|---|
@@ -313,36 +269,36 @@ Aplicabilidad de Log4j y Jackson en este microservicio: la explotación de CVE-2
 
 ### 6.6 Riesgos pendientes de Spring
 
-Los 23 CVE detectados están en componentes del núcleo de Spring Boot 3.5.16 (spring-core 6.2.19, spring-security-crypto 6.5.11 y spring-data-jpa 3.5.13). Esta sección conserva el análisis previo a las suppressions; el estado vigente tras la ejecución final está en las secciones 6.4 y 6.8.
+Las 23 CVE detectadas corresponden a `spring-core` 6.2.19, `spring-security-crypto` 6.5.11 y `spring-data-jpa` 3.5.13 en el proyecto basado en Spring Boot 3.5.16. Esta sección conserva el diagnóstico y las alternativas; el estado comprobado después de la retroalimentación se encuentra en las secciones 6.8 y 6.9.
 
 | Aspecto | Detalle |
 |---|---|
 | Versiones corregidas de la serie compatible | Spring Framework 6.2.20, Spring Security 6.5.12 y Spring Data JPA 3.5.14. Según la comprobación de P2-08 en Maven Central y en los avisos de Spring, son **solo para clientes con soporte Enterprise** y no están en Maven Central. No hay copia de esa comprobación en el repositorio **[P]**. |
 | Alternativa de código abierto | Las versiones corregidas públicas pertenecen a Spring Framework 7 / Spring Security 7, es decir, a Spring Boot 4. La migración se descartó en esta práctica por decisión del desarrollador. |
-| Estado | **Limitación vigente, gestionada pero no resuelta.** Antes de las suppressions, OWASP fallaba por los 15 CVE de CVSS ≥ 7. En la ejecución final (06/11/2026, 23:55:49) el gate se aprobó porque esos 15 CVE están suprimidos: 5 por asociación incorrecta de componente (vencen 2027-02-06) y 10 por aceptación temporal de riesgo (vencen 2026-12-06, sección 6.8). `failBuildOnCVSS=7` se mantiene. **Ninguno está corregido**, y las versiones corregidas siguen siendo solo Enterprise (Framework 6.2.20, Security 6.5.12) o de la serie 7 / Spring Boot 4. |
+| Estado | **Limitación vigente, no resuelta.** La prueba controlada del 09/11/2026 confirmó que OWASP falla por diez CVE altas al retirar las aceptaciones temporales. Las cinco asociaciones incorrectas están justificadas por ausencia de módulos; las diez restantes son riesgos no corregidos y sin aceptación externa. `failBuildOnCVSS=7` se mantiene. La versión pública 3.5.16 es la última de la rama 3.5.x; la corrección 6.2.20 de Framework requiere soporte Enterprise (véase §6.9). |
 | Triage preliminar por código (P2-08) | No se encontraron en `src` usos de WebFlux, mensajería, WebSocket, SpEL, SSE, LDAP, WebAuthn ni `AesBytesEncryptor`. Seguridad usa solo `BCryptPasswordEncoder` (`PasswordConfig`). El único `Sort` de Spring Data es constante (`Sort.by(ASC, "id")`) y no hay consultas nativas. |
 | Caso límite | CVE-2026-59281 (CVSS 6.1, spring-core): `ApiExceptionHandler` lee `getBindingResult().getFieldErrors()`, aunque la respuesta es `ProblemDetail` en JSON y no HTML. No se ha demostrado aplicabilidad ni inaplicabilidad **[P]**. |
 | Severidad del proveedor | En los avisos de Spring consultados en P2-08, varios CVE tienen severidad menor que el CVSS de NVD del reporte (por ejemplo, CVE-2026-47884: 9.8 en NVD y MEDIUM en el aviso). Solo se revisaron 6 CVE de spring-core; el resto **[P]**. |
 
 **Lo que no se concluye (análisis P2-08, anterior a las suppressions):** en ese momento ningún CVE se clasificaba como falso positivo definitivo; que las condiciones de explotación no se hayan observado en el código es una indicación de triage, no una prueba de inaplicabilidad. Posteriormente, P2-16 a P2-21 evaluaron individualmente los 15 CVE bloqueantes y se clasificaron así: 5 como asociación incorrecta de componente (módulos ausentes del árbol de dependencias, suprimidos hasta 2027-02-06) y 10 como componente presente con funcionalidad no observada, que **no** son falsos positivos y se aceptan temporalmente (sección 6.8). Las evaluaciones P2-16 a P2-21 no tienen entrada en la bitácora **[P]**. Los 8 CVE activos bajo el umbral no se validaron individualmente. Los CVE asociados por CPE a clases de LDAP, DPoP o WebAuthn en spring-security-crypto no se confirmaron con una inspección del JAR **[P]**; la ausencia de los módulos correspondientes se basa en el árbol de dependencias.
 
-**Opciones para decidir (estado tras la ejecución final):**
+**Opciones evaluadas (vigentes al 09/11/2026):**
 1. Obtener soporte Enterprise de Spring, con las credenciales en `settings.xml` o variables de entorno, **nunca en el repositorio**. *No adoptada.*
-2. Planificar la migración a Spring Boot 4 / Framework 7 en una práctica posterior. *Pendiente; es la corrección de fondo antes del vencimiento del 2026-12-06.*
+2. Migrar a Spring Boot 4 / Framework 7 en un proyecto futuro. *No se realizará en esta práctica, por límite de alcance; no se declara como corrección aplicada.*
 3. Aceptar el riesgo con suppressions con caducidad. *Adoptada de forma temporal por decisión del responsable del desarrollo para los 10 CVE de la sección 6.8; las 5 asociaciones incorrectas se suprimieron por separado.* No sustituye las opciones 1 y 2.
 
 **P3:** al incorporar Spring Security (JWT y roles), los CVE de spring-security-crypto deben reevaluarse.
 
-### 6.7 Evidencias OWASP todavía pendientes **[P]**
-- Salida de consola del escaneo OWASP con 13.0.0 (comando, fecha y líneas de la fase de OWASP). El extracto final del 06/11/2026, 23:55:49 (sección 4.9) solo cubre JaCoCo y el cierre del build, no la fase de OWASP.
-- Copia del JSON del estado final (23 CVE detectados: 15 suprimidos y 8 activos) para conservarlo antes de regenerarlo.
+### 6.7 Evidencias OWASP y limitaciones aún pendientes
+- El análisis OWASP volvió a ejecutarse localmente el 09/11/2026 en dos escenarios (véase §6.9). Las salidas se compartieron para revisión, pero **todavía no se incorporaron como archivos versionados** al repositorio.
+- El JSON del 09/11/2026 confirmó 23 CVE (15 suprimidos y 8 activos). Falta decidir si se versionará una copia depurada o se conservará como artefacto de CI; el contenido actual en `target/` se sobrescribe en cada ejecución.
 - ~~Validación individual CVE por CVE de los 23 antes de cualquier supresión~~ Realizada para los 15 CVE suprimidos (P2-16 a P2-21, sin entradas de bitácora). Pendiente para los 8 CVE activos bajo el umbral.
 - Inspección del despliegue (opciones de JVM, variables de entorno, proxies, exposición de red), que condiciona sobre todo a CVE-2026-59283.
 - Token de Sonatype Guide y habilitación de OSS Index (`ossIndexServerId`, requiere aprobación).
 
 ### 6.8 Aceptación temporal de riesgos de 10 CVE de Spring Framework (P2-22)
 
-**Estado: decisión documentada y verificada por la ejecución final (P2-23).** En la ejecución del 06/11/2026, 23:55:49 (UTC-06:00), `.\mvnw.cmd -B clean verify` terminó en `BUILD SUCCESS` **[D]** con estas 10 aceptaciones vigentes **[V]** (`suppressedVulnerabilities` del JSON). El gate se aprobó por la supresión temporal, no porque los CVE estén corregidos ni porque OWASP esté «limpio»: siguen detectados (sección 6.4).
+**Estado histórico al 06/11 (P2-23), revalidado el 09/11 (véase §6.9).** En la ejecución del 06/11/2026, 23:55:49 (UTC-06:00), `.\mvnw.cmd -B clean verify` terminó en `BUILD SUCCESS` **[D]** con estas 10 aceptaciones vigentes **[V]** (`suppressedVulnerabilities` del JSON). El gate se aprobó por la supresión temporal, no porque los CVE estén corregidos ni porque OWASP esté «limpio»: siguen detectados. La revisión del 09/11 reprodujo el fallo al eliminar esas diez supresiones (sección 6.9).
 
 **Alcance y naturaleza de la decisión**
 - El responsable del desarrollo decidió **aceptar temporalmente el riesgo residual** de 10 CVE de Spring Framework 6.2.19 para el alcance actual de la práctica.
@@ -357,8 +313,8 @@ Los 23 CVE detectados están en componentes del núcleo de Spring Boot 3.5.16 (s
 - **[V]** `src` (principal y pruebas): un único `@RestController` (`UsuarioController`) con `@PathVariable Long` y `@Valid @RequestBody` (JSON). No se encontraron `Flux`, `Mono`, `RouterFunction`, `ServerResponse`, `SseEmitter`, `text/event-stream`, `XsltView`, `ViewResolver`, `SpelExpressionParser`, `@Value`, `@Query`, `DataBinder`, `@ModelAttribute`, `Jaxb`, Jetty, multipart, cookies ni CORS.
 - **[V]** `pom.xml`: `spring-boot-starter-web` (servidor Tomcat, sin exclusiones), `data-jpa`, `validation`, `flyway`, `postgresql` y `spring-security-crypto`. Sin WebFlux, motor de vistas, actuator, Jetty ni Aalto como dependencias directas.
 - **[V]** `application.yaml`: no define `spring.expression.compiler.mode`. `src/main/resources` solo contiene `application.yaml` y la migración Flyway; no existe `spring.properties`.
-- **[V]** El repositorio no contiene Dockerfile, compose, flujos de CI ni `.mvn/jvm.config`: **no hay evidencia de cómo se despliega o ejecuta el servicio**.
-- **[D]** Revisión del árbol Maven realizada por el desarrollador: no hay WebFlux, Reactor, Aalto ni Jetty. No se pudo comprobar con los archivos del repositorio.
+- **[V]** El repositorio incorpora `.github/workflows/ci.yml` y tiene una ejecución exitosa en GitHub Actions del 09/11/2026. No se identificó en los archivos revisados una configuración completa de despliegue productivo (Dockerfile, Compose, variables reales de ejecución o proxies); el CI **no demuestra** que se haya validado el entorno de producción.
+- **[V]** El árbol Maven filtrado del 09/11/2026 no mostró `spring-webflux`, `spring-messaging` ni los módulos especializados de Spring Security citados. Las ausencias de Reactor, Aalto o Jetty **no quedan demostradas por ese filtro**; conservan el carácter de observación local previa [D] hasta revisar el árbol completo.
 - **[D]** Revisión de la configuración local por el desarrollador: no hay variables que activen explícitamente el compilador SpEL.
 - **Riesgo residual común:** el despliegue (opciones de JVM, variables de entorno, proxies, exposición de red) no se ha inspeccionado; no se analizó el código de librerías de terceros; los endpoints actuales no tienen autenticación (JWT y roles son P3), por lo que los CVE de denegación de servicio no cuentan con esa barrera si el servicio se expone.
 
@@ -384,19 +340,82 @@ Los CVSS son los del reporte de OWASP (NVD, `target/dependency-check-report.json
 | CVE | Evidencia del código y de la configuración local | Mitigaciones existentes | Riesgo residual y limitaciones | Se reevalúa si |
 |---|---|---|---|---|
 | CVE-2026-47884 | **[V]** Sin `XsltView` ni `ViewResolver` en `src`; sin motor de vistas en `pom.xml`; solo un `@RestController`. | La API devuelve JSON; no renderiza vistas. | Es el CVE de mayor impacto (SSRF y RCE). Se desconoce el despliegue y no se descartó código de terceros que registre vistas. | Se agregan vistas (XSLT o plantillas) o mappings `/**` que renderizan vistas. |
-| CVE-2026-47885 | **[V]** Sin `Flux`, `Mono` ni multipart en `src`; `pom.xml` sin WebFlux. **[D]** Árbol sin WebFlux ni Reactor. | Pila Spring MVC sobre Tomcat, no reactiva. | Los endpoints no tienen autenticación hasta P3. La ausencia en el árbol no se comprobó en el repositorio. | Se agregan WebFlux, Reactor o endpoints multipart. |
+| CVE-2026-47885 | **[V]** Sin `Flux`, `Mono` ni multipart en `src`; `pom.xml` sin WebFlux. **[V]** El árbol filtrado del 09/11 no contiene WebFlux; la ausencia de Reactor no queda comprobada por ese filtro. | Pila Spring MVC sobre Tomcat, no reactiva. | Los endpoints no tienen autenticación hasta P3. La ausencia en el árbol no se comprobó en el repositorio. | Se agregan WebFlux, Reactor o endpoints multipart. |
 | CVE-2026-47886 | **[V]** Sin `SpelExpressionParser`, `@Value`, `@Query` ni `#{}` en `src`; sin actuator en `pom.xml`. | Ningún endpoint evalúa expresiones. | No se analizó si librerías de terceros evalúan SpEL con entrada del usuario. | Se evalúan expresiones SpEL con datos del usuario (por ejemplo, en la autorización de P3). |
 | CVE-2026-47890 | **[V]** Sin `SseEmitter` ni `text/event-stream` en `src`; sin motor de plantillas. | Solo respuestas JSON síncronas. | Se desconoce el despliegue. | Se agregan SSE o plantillas de vista. |
-| CVE-2026-47891 | **[V]** Sin XML, `Jaxb` ni WebFlux en `src`; Aalto no figura en `pom.xml`. **[D]** El árbol Maven no contiene WebFlux, Reactor ni Aalto. | Los DTO se reciben como JSON con Jackson; no hay procesamiento XML. | La ausencia en el árbol es un dato del desarrollador; no se inspeccionó el despliegue. | Se incorporan dependencias reactivas o procesamiento XML. |
+| CVE-2026-47891 | **[V]** Sin XML, `Jaxb` ni WebFlux en `src`; Aalto no figura en `pom.xml`. **[V]** No aparece WebFlux en el árbol filtrado; Reactor y Aalto requieren revisar el árbol completo. | Los DTO se reciben como JSON con Jackson; no hay procesamiento XML. | La ausencia en el árbol es un dato del desarrollador; no se inspeccionó el despliegue. | Se incorporan dependencias reactivas o procesamiento XML. |
 | CVE-2026-47892 | **[V]** Sin `RouterFunction` ni `ServerResponse` en `src`; sin `@CrossOrigin` ni configuración CORS; mapeo solo con anotaciones. | No se usan endpoints funcionales. | Se desconoce el comportamiento de proxies o intermediarios del despliegue. | Se agregan endpoints funcionales, CORS o WebFlux. |
 | CVE-2026-59282 | **[V]** El controlador solo usa `@PathVariable Long` y `@Valid @RequestBody`; sin `@ModelAttribute`, `DataBinder` ni `BeanWrapper`; sin `List` como propiedad en DTO ni entidades. `spring.jackson.deserialization.fail-on-unknown-properties` está en `true` en `application.yaml`. | Entrada JSON validada con Jakarta Validation; no se aplican rutas de propiedades del cliente. | No se analizó código de terceros que use el binding; endpoints sin autenticación hasta P3. | Se agrega binding de formularios o parámetros a objetos, o colecciones en los DTO. |
 | CVE-2026-59283 | **[V]** Sin SpEL en `src`; `application.yaml` no define `spring.expression.compiler.mode`; no existe `spring.properties`. **[D]** El desarrollador no halló variables que activen el compilador. | El compilador SpEL está desactivado por defecto; no se encontró nada que lo active localmente. | **No se inspeccionaron opciones de JVM, variables de entorno ni el despliegue** (el repositorio no contiene Dockerfile ni CI) y no se analizó código de terceros con `SimpleEvaluationContext`. Es la limitación de verificación más relevante de esta tabla. | Se activa el compilador SpEL (propiedad, variable o JVM) o se usa `SimpleEvaluationContext`. |
 | CVE-2026-59313 | **[V]** Sin `RouterFunction`, `ServerResponse` ni SSE en `src`. | Solo controladores con anotaciones y respuestas JSON. | Se desconoce el despliegue. | Se agregan endpoints funcionales o SSE. |
-| CVE-2026-47889 | **[V]** `spring-boot-starter-web` (Tomcat) sin exclusiones; sin cookies, WebFlux ni Jetty en `src` ni en `pom.xml`. **[D]** Árbol sin Jetty, WebFlux ni Reactor. | Servidor Tomcat; la aplicación no emite cookies. | La ausencia en el árbol es un dato del desarrollador; no se inspeccionó el despliegue. | Se cambia a Jetty, se agrega WebFlux o la aplicación empieza a emitir cookies. |
+| CVE-2026-47889 | **[V]** `spring-boot-starter-web` (Tomcat) sin exclusiones; sin cookies, WebFlux ni Jetty en `src` ni en `pom.xml`. **[V]** WebFlux no aparece en el árbol filtrado; Jetty y Reactor requieren revisar el árbol completo. | Servidor Tomcat; la aplicación no emite cookies. | La ausencia en el árbol es un dato del desarrollador; no se inspeccionó el despliegue. | Se cambia a Jetty, se agrega WebFlux o la aplicación empieza a emitir cookies. |
 
 **Condiciones generales que obligan a reevaluar todos los CVE de esta sección:** llegar al vencimiento (2026-12-06); cualquier cambio en las dependencias de Spring, Spring Boot o el árbol Maven; la incorporación de JWT y Spring Security en P3; nuevos avisos o cambios de severidad de Spring; y cualquier despliegue real del servicio, cuyas condiciones deben inspeccionarse antes de dar por válida esta aceptación.
 
 **Relación con secciones anteriores:** las secciones 6.6, 7.2, 7.3, 8 y 9.1, y el encabezado del documento, se actualizaron en P2-23 para reflejar la configuración de `config/owasp-suppressions.xml` y la ejecución final, conservando como historial el estado sin suppressions. La sección 8 registra una propuesta rechazada en P2-08; los CVE de esta sección se aceptan después, con una evaluación individual (P2-16 y P2-21) y la decisión humana de P2-22.
+
+### 6.9 Revalidación tras la retroalimentación del instructor (09/11/2026)
+
+#### 6.9.1 Objetivo y alcance de la comprobación
+
+El instructor solicitó actualizar `spring-boot-starter-parent` al último parche 3.5.x, volver a ejecutar `dependency-check:check`, retirar supresiones innecesarias y conservar exclusivamente falsos positivos justificables. Se verificó que el proyecto **ya declara Spring Boot 3.5.16**, última versión de código abierto de la línea 3.5.x. [Anuncio oficial de Spring Boot, 25/06/2026](https://spring.io/blog/2026/06/25/spring-boot-3-5-16-available-now/). No se encontró un parche público posterior de 3.5.x que actualizar.
+
+Spring Framework **6.2.19** permanece como dependencia administrada. Los avisos de Spring indican que **6.2.20** contiene correcciones, pero está disponible **solo mediante soporte Enterprise**. Por ejemplo, [CVE-2026-47884](https://spring.io/security/cve-2026-47884/) identifica el rango afectado 6.2.0–6.2.19 y la corrección 6.2.20 bajo soporte comercial. Por decisión de alcance, no se emprendió una migración a Spring Boot 4.
+
+#### 6.9.2 Árbol de dependencias
+
+Se ejecutó en CMD:
+
+```cmd
+mvnw.cmd -B dependency:tree "-Dincludes=org.springframework:*,org.springframework.security:*"
+```
+
+**Resultado:** `BUILD SUCCESS` el 09/11/2026 a las 17:29:35 (UTC−06:00). Maven confirmó:
+
+| Dependencia | Versión |
+|---|---|
+| Spring Boot (`spring-boot-starter-web` / `data-jpa` / `test`) | 3.5.16 |
+| Spring Framework (incluido `spring-core`, `spring-web`, `spring-webmvc`, `spring-expression`) | 6.2.19 |
+| Spring Data JPA | 3.5.13 |
+| Spring Security Crypto | 6.5.11 |
+
+No aparecen `spring-webflux`, `spring-messaging`, `spring-security-ldap`, `spring-security-oauth2-jose` ni `spring-security-web` en el **árbol filtrado por grupo Spring**. Esa salida respalda las cinco supresiones por asociaciones incorrectas de componentes, pero **no prueba la ausencia de Jetty, Reactor o Aalto**, porque son de otros grupos Maven.
+
+#### 6.9.3 Prueba controlada de OWASP
+
+Se mantuvo `failBuildOnCVSS=7` y se realizaron dos análisis con OWASP Dependency-Check 13.0.0:
+
+| Escenario | Resultado | Fecha y hora (UTC−06:00) |
+|---|---|---|
+| Archivo original con 15 supresiones: 5 asociaciones incorrectas + 10 aceptaciones temporales | **`BUILD SUCCESS`** | 09/11/2026, 17:12:06 |
+| Archivo de prueba, con solo las 5 supresiones por asociación incorrecta | **`BUILD FAILURE`** | 09/11/2026, 17:34:12 |
+
+Ambas ejecuciones utilizaron el comando `mvnw.cmd -B dependency-check:check`. La primera generó un JSON con **23 CVE detectados**: 5+3=8 activos (5 en `spring-core`, 1 en `spring-data-jpa`, 2 en `spring-security-crypto`) y 15 suprimidos. La segunda devolvió diez CVE bloqueantes en `spring-core` 6.2.19:
+
+| CVE | CVSS informado por OWASP |
+|---|---:|
+| CVE-2026-47884 | 9.8 |
+| CVE-2026-47885 | 7.5 |
+| CVE-2026-47886 | 7.5 |
+| CVE-2026-47889 | 7.5 |
+| CVE-2026-47890 | 9.8 |
+| CVE-2026-47891 | 9.8 |
+| CVE-2026-47892 | 9.8 |
+| CVE-2026-59282 | 7.5 |
+| CVE-2026-59283 | 9.1 |
+| CVE-2026-59313 | 9.8 |
+
+La prueba **demuestra que las diez supresiones temporales hacen pasar el quality gate**, no que las vulnerabilidades estén corregidas. No demuestra por sí sola que cada ruta de explotación sea accesible desde los endpoints actuales; las condiciones y limitaciones se examinan individualmente en §6.8.
+
+#### 6.9.4 Estado de las reglas, riesgos y decisión
+
+Se restauró el archivo original `config/owasp-suppressions.xml` después de la prueba, para no incorporar un cambio experimental que provocara un fallo del CI. El archivo mantiene **15 reglas**: cinco supresiones por identificación errónea de módulo (vencen el 06/02/2027) y diez aceptaciones temporales de riesgo (vencen el 06/12/2026). **No se eliminaron reglas de forma definitiva** y no se cambió la configuración de OWASP ni su umbral de 7.
+
+**Estado de la observación:** *diagnóstico actualizado y documentado; remediación de las diez CVE aún pendiente*. Las cinco supresiones por asociación incorrecta tienen justificación técnica por ausencia de módulos en el árbol Spring. Las otras diez **no se reclasifican como falsos positivos** solamente porque el código del servicio no use determinadas funciones. Obtener `BUILD SUCCESS` con ellas no satisface por sí solo la solicitud del instructor de corregir las vulnerabilidades y reducir supresiones.
+
+Se comunicará al instructor esta limitación técnica para decidir un criterio de cierre dentro del alcance acordado de Spring Boot 3.5.x. Una solución que requiera soporte Enterprise, o una migración mayor, **no se presenta como aplicada**. Hasta que exista una corrección o decisión externa expresa, el riesgo sigue abierto.
+
+**Fuentes y evidencias:** anuncio de [Spring Boot 3.5.16](https://spring.io/blog/2026/06/25/spring-boot-3-5-16-available-now/); aviso [CVE-2026-47884](https://spring.io/security/cve-2026-47884/); salidas de CMD de `dependency:tree` y `dependency-check:check` del 09/11; JSON local generado el 09/11; `pom.xml` y `config/owasp-suppressions.xml` de `practica-2`. Las salidas locales y el JSON no están archivados todavía como anexos versionados del repositorio.
 
 ## 7. Propuestas de IA, decisiones humanas y correcciones aplicadas
 
@@ -410,12 +429,13 @@ Los CVSS son los del reporte de OWASP (NVD, `target/dependency-check-report.json
 | P2-03 | Borrador de este reporte | Revisado y aprobado por el desarrollador, con ajustes |
 | P2-04 | Corrección de 11 hallazgos (LineLength y MultipleStringLiterals) en `ApiExceptionHandler.java` y `UsuarioController.java` | Aprobada y aplicada |
 | P2-05 | Clase de constantes compartidas `RestriccionesUsuario` para los 8 MagicNumber (alternativa 3) | Aprobada y aplicada |
-| P2-06 | Actualizar Dependency-Check a 13.0.0 con reportes HTML y JSON; incorporar `ossIndexServerId` | Actualización y reportes: aprobados y aplicados. `ossIndexServerId`: **aplazado** por falta de token de Sonatype Guide (aprobación parcial) |
+| P2-06 | Actualizar Dependency-Check a 13.0.0 con HTML/JSON e incorporar `ossIndexServerId` | Actualización y reportes aprobados. **Rechacé agregar `ossIndexServerId` sin contar con un token de Sonatype Guide**; no está configurado y se conservó el análisis mediante NVD **[V]** |
 | P2-07 | Actualizar `postgresql.version` y `tomcat.version` mediante propiedades del BOM | Aprobada y aplicada |
 | P2-08 | Actualizar Log4j y Jackson; documentar las correcciones Enterprise de Spring como limitación | Log4j y Jackson: aprobados y aplicados. Spring: no aplicado (sección 6.6) |
 | P2-09 | Actualización de este informe final | Aprobada y aplicada en este documento |
-| P2-08 | Gestionar los CVE pendientes con suppressions específicas, con evidencia por CVE y fecha de expiración | **No autorizada en P2-08** (sección 8). **Posteriormente adoptada** en P2-17 a P2-22 por decisión humana: 5 suppressions de asociación incorrecta (hasta 2027-02-06) y 10 aceptaciones temporales de riesgo (hasta 2026-12-06), con evaluación individual previa |
-| P2-23 | Actualización del informe final con la ejecución de `.\mvnw.cmd -B clean verify` del 06/11/2026, 23:55:49 | Aplicada en este documento; pendiente de revisión humana |
+| P2-08 | Gestionar CVE mediante suppressions específicas y caducidad | No autorizada inicialmente; **posteriormente aplicada** en P2-17 a P2-22. **Por ese motivo no se presenta como rechazo definitivo a la IA** (véase §8) |
+| P2-23 | Actualización del informe con la ejecución del 06/11/2026 | Aplicada; registro histórico de 13 pruebas, superado después por el CI de 16 pruebas |
+| 09/11 | Revalidar OWASP después de la retroalimentación y documentar CI | Se agregaron evidencias de dos ejecuciones OWASP, del árbol Maven y del workflow sin afirmar corrección de las diez CVE (§6.9 y §10.4) |
 
 ### 7.2 Decisiones humanas
 
@@ -423,11 +443,11 @@ Los CVSS son los del reporte de OWASP (NVD, `target/dependency-check-report.json
 |---|---|
 | Línea base contrastada con archivos | Checkstyle, PMD, CPD, SpotBugs, JaCoCo y pruebas coinciden con la línea base; OWASP se verificó parcialmente. |
 | OWASP | 70 asociaciones con CVE no son 70 vulnerabilidades únicas, y una alerta no demuestra explotabilidad. |
-| OSS Index | Se identificó un HTTP 401 de autenticación de OSS Index (no relacionado con Flyway); no se autoriza desactivar el analizador sin evaluar alternativas y consecuencias. |
+| OSS Index | Rechacé configurar `ossIndexServerId` antes de disponer de credenciales válidas. OWASP utiliza la fuente NVD mediante `NVD_API_KEY`; OSS Index permanece inactivo por falta de token, como limitación visible en los logs. No se atribuye esa falta de cobertura a una corrección de seguridad. |
 | Correcciones | **Línea base (06/11/2026):** no se habían autorizado correcciones. **Posteriormente** se autorizaron y aplicaron los lotes de la sección 7.3. Se mantiene la regla de no suprimir reglas de calidad ni usar `@SuppressWarnings`. Las suppressions de OWASP **no estaban autorizadas** en P2-08; después se autorizaron de forma específica (5 asociaciones incorrectas y 10 aceptaciones temporales) con decisión humana. |
 | Spring | Las correcciones Enterprise de Spring no se aplican y no se migra a Spring Boot 4 en esta práctica. Los 10 CVE bloqueantes con funcionalidad no observada se aceptan temporalmente hasta 2026-12-06 (decisión del responsable del desarrollo, sin aprobación externa; sección 6.8). |
 | Aceptación de riesgo (P2-22) | El responsable del desarrollo aceptó temporalmente el riesgo residual de 10 CVE; no son falsos positivos ni están corregidos. Vence el 2026-12-06 y debe reevaluarse o reemplazarse por una actualización a versiones corregidas. |
-| Evidencias de la guía de IDS | Se incorporan SonarQube, la salida final de Maven, los tres hallazgos y la propuesta de IA rechazada como requisitos de la entrega (sección 10). |
+| Evidencias de la guía de IDS | Se incorporan SonarQube, los tres hallazgos explicados en primera persona, un rechazo verificable de IA (§8), el build local y el resultado de Actions (§10). |
 
 ### 7.3 Correcciones aplicadas
 
@@ -443,106 +463,113 @@ La configuración de los analizadores ya estaba realizada: `pom.xml` declara los
 | P2-05 — MagicNumber | `RestriccionesUsuario.java` (nuevo), `Usuario.java`, `CrearUsuarioRequest.java`, `ActualizarUsuarioRequest.java` | 13 aprobadas **[D]** | Checkstyle 8 → 0; JaCoCo 71.43 % **[D]** (estado final **[V]**, sección 4.8) | Aplicado |
 | P2-06 — Dependency-Check | `pom.xml` (bloque del plugin): 12.1.0 → 13.0.0, formatos HTML y JSON; se conserva `failBuildOnCVSS=7` y `NVD_API_KEY` | — | Reporte JSON generado: 47 CVE en 7 dependencias **[D]** | Aplicado |
 | P2-07 — PostgreSQL y Tomcat | `pom.xml` (`<properties>`): `postgresql.version` 42.7.14, `tomcat.version` 10.1.61 | 13 aprobadas **[D]** | OWASP: 47 → 27 CVE **[D]** | Aplicado |
-| P2-08 — Log4j y Jackson | `pom.xml` (`<properties>`): `log4j2.version` 2.25.5, `jackson-bom.version` 2.21.5 | 13 aprobadas (resultado final) **[V]** | OWASP: 27 → 23 CVE **[V]** | Aplicado |
+| P2-08 — Log4j y Jackson | `pom.xml` (`<properties>`): `log4j2.version` 2.25.5, `jackson-bom.version` 2.21.5 | 13 aprobadas (resultado histórico del 06/11) **[V]** | OWASP: 27 → 23 CVE **[V]** | Aplicado |
 | P2-17 a P2-20 — Suppressions de identificación incorrecta | `config/owasp-suppressions.xml` (nuevo; 5 reglas finales), `pom.xml` (`suppressionFiles`) y `.github/skills/quality-gates-java/references/maven-plugins.xml` | — | 5 CVE excluidos por asociación CPE incorrecta; vencimiento 2027-02-06 **[V]** (archivo y JSON) | Aplicado |
 | P2-22 — Aceptación temporal de riesgos | `config/owasp-suppressions.xml` (10 reglas), `docs/QUALITY-REPORT.md` (sección 6.8), `BITACORA-IA.md`; vencimiento 2026-12-06 | — | 10 CVE bajo aceptación temporal **[V]** (archivo y JSON) | Aplicado |
-| P2-23 — Informe final | `docs/QUALITY-REPORT.md`, `BITACORA-IA.md` (solo documentación) | 13 aprobadas, 0 fallos, 0 errores, 0 omitidas **[D]**/**[V]** | `.\mvnw.cmd -B clean verify` final: `BUILD SUCCESS` **[D]**; OWASP con 15 suprimidos y 8 activos **[V]** | Aplicado; pendiente de revisión humana |
+| P2-23 — Informe del 06/11 | `docs/QUALITY-REPORT.md`, `BITACORA-IA.md` | 13 pruebas aprobadas, **estado histórico** | `clean verify` exitoso con 15 supresiones y 8 CVE activas | Aplicado |
+| 07/11 — Pruebas adicionales | `UsuarioServiceTest.java`, perfil H2 de contexto | 16 aprobadas, 0 fallos, 0 errores, 0 omitidas | Cobertura 70.15 % (94/134) en verificación local | Aplicado |
+| 09/11 — CI | `.github/workflows/ci.yml` | 16 pruebas aprobadas en Actions | `./mvnw -B verify`: `BUILD SUCCESS`, gates activos | Aplicado |
+| 09/11 — Revisión OWASP | Análisis local y actualización documental | No modifica las pruebas | Con 15 supresiones: `BUILD SUCCESS`; con solo 5: `BUILD FAILURE`. Se restauró el XML original | Diagnóstico documentado; riesgo pendiente |
 
-Sin modificaciones en pruebas, migraciones Flyway, servicios, repositorios ni endpoints. Ninguna regla de calidad se desactivó y no se usó `@SuppressWarnings` **[V]**. Las suppressions de OWASP existen únicamente en `config/owasp-suppressions.xml` (15 reglas: 5 de asociación incorrecta y 10 de aceptación temporal), referenciado desde `suppressionFiles` en `pom.xml`; `failBuildOnCVSS=7` se conserva y no se declara `ossIndexServerId` **[V]**.
+En los lotes P2-04 a P2-23 no se modificaron pruebas, migraciones Flyway, servicios, repositorios ni endpoints. **Posteriormente se añadieron tres pruebas negativas** (07/11), sin modificar rutas ni esquema. Ninguna regla de calidad se desactivó y no se usó `@SuppressWarnings` **[V]**. Las suppressions de OWASP existen únicamente en `config/owasp-suppressions.xml` (15 reglas: 5 de asociación incorrecta y 10 de aceptación temporal), referenciado desde `suppressionFiles` en `pom.xml`; `failBuildOnCVSS=7` se conserva y no se declara `ossIndexServerId` **[V]**.
 
 Los cambios documentales de la línea base fueron `prompts/P2-02-diagnostico-calidad.md`, la entrada P2-02 de `BITACORA-IA.md` y este reporte. Las entradas P2-03 a P2-09 constan en la bitácora. Los prompts originales de esas sesiones y los registros P2-12 a P2-21 quedan pendientes **[P]**.
 
-## 8. Propuesta de IA rechazada
+## 8. Propuesta de IA rechazada y alternativa adoptada
 
-| Campo | Contenido |
-|---|---|
-| Propuesta | En P2-08, la IA propuso como alternativa de gestión de los CVE pendientes (Spring) el uso de **suppressions específicas**, cada una con la evidencia del CVE correspondiente y una **fecha de expiración**, sujetas a aprobación. |
-| Origen | Propuesta de IA en la sesión P2-08 **[D]**. Registrada en la entrada P2-08 de `BITACORA-IA.md` **[V]**. |
-| Estado | **No se autorizó y no se implementó en P2-08.** En ese momento `pom.xml` no declaraba suppressions, no existía ningún archivo de suppressions y `failBuildOnCVSS=7` se conservaba. **Actualización posterior (P2-17 a P2-23):** tras la evaluación individual de los 15 CVE bloqueantes, el responsable del desarrollo autorizó de forma específica las suppressions: 5 por asociación incorrecta de componente (hasta 2027-02-06) y 10 como aceptación temporal de riesgo (hasta 2026-12-06). `failBuildOnCVSS=7` se conserva **[V]**. |
-| Justificación de la decisión | (1) La validación individual de los hallazgos aún no se había completado (sección 6.6); una supresión equivale a declarar un falso positivo o un riesgo aceptado y exige esa validación previa. (2) No se quiso ocultar riesgos para superar el quality gate: en ese momento los 15 CVE con CVSS ≥ 7 figuraban en el reporte y bloqueaban el gate **[V]**. (3) Las instrucciones del proyecto exigen documentar y revisar cualquier posible falso positivo antes de modificar reglas, y no se autorizaron suppressions en ningún lote de P2-06 a P2-08. |
-| Alternativa adoptada en ese momento | Actualizar solo las dependencias con corrección pública compatible (PostgreSQL, Tomcat, Log4j y Jackson: 47 → 23 CVE), conservar `failBuildOnCVSS=7`, documentar el riesgo pendiente de Spring (sección 6.6) y decidir con aprobación entre soporte Enterprise, migración a Spring Boot 4 o aceptación de riesgo validada. Esa última opción se concretó después en las secciones 6.4 y 6.8. |
+Durante la interacción **P2-06** de calidad de dependencias, GitHub Copilot propuso incorporar `ossIndexServerId` al bloque OWASP Dependency-Check en `pom.xml` para utilizar también el servicio Sonatype OSS Index.
 
-Esta decisión no afirmaba que los CVE de Spring fueran explotables: indicaba que su aplicabilidad aún no estaba demostrada ni descartada con evidencia suficiente. Las suppressions posteriores se aprobaron con evaluación individual y no ocultan que los 15 CVE siguen detectados y sin corregir.
+**Qué rechacé:** no autoricé agregar esa configuración porque **no disponía de un token válido de Sonatype Guide**. Incluir un identificador de servidor sin poder autenticar el servicio no resolvía los hallazgos de seguridad y podía producir un error de autenticación o una falsa impresión de que el analizador adicional estaba operativo. Este rechazo consta en `BITACORA-IA.md`, entrada P2-06, que distingue expresamente la aprobación de Dependency-Check 13.0.0 y los reportes HTML/JSON de la parte `ossIndexServerId` no autorizada.
+
+**Qué hice en su lugar:** limité el cambio a Dependency-Check 13.0.0, habilité sus informes HTML/JSON, mantuve `failBuildOnCVSS=7` y utilicé la variable de entorno `NVD_API_KEY` para actualizar los datos de NVD. El `pom.xml` no contiene `ossIndexServerId`; los logs muestran que el analizador Sonatype OSS Index está **inactivo por falta de credenciales**, una limitación declarada y no oculta. Si posteriormente se obtiene un token válido, su incorporación requerirá una nueva decisión y validación.
+
+**Diferencia con las supresiones:** en P2-08 no autoricé inicialmente las suppressions por falta de evidencia individual, pero **más adelante sí fueron incorporadas**. Por tanto, esa propuesta **no se utiliza aquí como ejemplo de rechazo definitivo**, tal como observó el instructor. Las diez aceptaciones temporales y su riesgo siguen descritos en las secciones 6.8 y 6.9.
+
+**Evidencia:** `BITACORA-IA.md` (P2-06 y P2-08), `pom.xml`, configuración de Dependency-Check y logs de OWASP. No se atribuye a la IA una decisión que no esté respaldada por estas fuentes.
 
 ## 9. Validación final y conclusiones
 
-### 9.1 Validación final
+### 9.1 Verificación del estado más reciente
 
-| Criterio | Estado | Evidencia |
+| Criterio | Resultado | Evidencia / límite |
 |---|---|---|
-| `.\mvnw.cmd -B clean verify -Ddependency-check.skip=true` con `BUILD SUCCESS` (**ejecución anterior**) | Cumplía, con OWASP omitido; reemplazada por la ejecución final | **[D]**; resultados de los analizadores en `target/` **[V]** |
-| Ejecución individual de OWASP con CVSS ≥ 7 (**anterior, sin suppressions**) | No cumplía: `BUILD FAILURE` (15 CVE ≥ 7). Historial conservado | **[D]**; JSON del momento ya no disponible, los 15 CVE figuran hoy como suprimidos **[V]** |
-| `.\mvnw.cmd -B clean verify` sin omisiones con `BUILD SUCCESS` (**final**, 06/11/2026, 23:55:49, UTC-06:00) | **Cumple:** `BUILD SUCCESS` con OWASP incluido | **[D]**; resultados de los analizadores contrastados con `target/` **[V]** y extracto de consola proporcionado por el desarrollador (sección 4.9) |
-| Checkstyle, PMD, CPD y SpotBugs sin hallazgos pendientes | Cumple | **[V]** (0, 0, 0 y 0) |
-| JaCoCo ≥ 70 % de líneas | Cumple: 71.43 % (90/126) | **[V]** (`jacoco.csv`) |
-| 13 pruebas existentes aprobadas, sin eliminar ninguna | Cumple: 13 aprobadas, 0 fallos, 0 errores, 0 omitidas | **[V]** (`surefire-reports`) |
-| OWASP: alertas con CVSS ≥ 7.0 atendidas o justificadas | **Cumple por supresión documentada, no por corrección:** 15 CVE suprimidos (5 asociaciones incorrectas hasta 2027-02-06 y 10 aceptaciones temporales hasta 2026-12-06, sin aprobación externa). 8 CVE activos con CVSS < 7 | **[V]** (JSON: 8 `vulnerabilities`, 15 `suppressedVulnerabilities`) |
-| Errores de herramienta (401 de OSS Index y URL largas) | Parcial: se actualizó a 13.0.0; OSS Index sigue deshabilitado por falta de credenciales de Sonatype | **[D]**; sin consola para confirmar la ausencia del error de URL **[P]** |
-| Evidencia de SonarQube | Cumple: captura de SonarQube for IDE sobre `UsuarioService.java` con 0 issues y 0 Security Hotspots; no es un análisis de todo el proyecto | Captura **[V]** y registro **[V]** (sección 10.1) |
-| Sin reglas desactivadas ni `@SuppressWarnings` para ocultar hallazgos | Cumple en lo revisado: no hay `@SuppressWarnings`, `@SuppressFBWarnings` ni `NOPMD` en `src`; `failBuildOnCVSS=7` se conserva y OWASP sigue habilitado. Las suppressions de OWASP son específicas, documentadas y con vencimiento (`config/owasp-suppressions.xml`). No se comparó el contenido de `checkstyle.xml` y `ruleset.xml` con la línea base **[P]** | **[V]** |
+| `./mvnw -B verify` en CI sin omitir analizadores | **`BUILD SUCCESS`** | GitHub Actions del 09/11/2026, rama `practica-2`, commit `2881056`; [ejecución](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42716270381) **[V]** |
+| Checkstyle, PMD/CPD y SpotBugs/FindSecBugs | Gates aprobados; Checkstyle reportó 0 violaciones | Log de CI **[V]** |
+| Pruebas automatizadas | **16 aprobadas, sin fallos, errores ni omitidas** | Log de CI **[V]** |
+| JaCoCo — líneas ≥ 70 % | **70.15 % (94/134)** en el último reporte porcentual local del 07/11; gate aprobado también en CI | §10.3 **[D]** y log de CI **[V]** |
+| OWASP Dependency-Check 13.0.0 | Gate aprobado **con 15 supresiones**; ocho CVE activas bajo el umbral | JSON local 09/11 y log de CI **[D]/[V]** |
+| OWASP sin diez aceptaciones temporales | **`BUILD FAILURE`**, diez CVE bloqueantes con CVSS 7.5–9.8 | Salida de CMD del 09/11 a las 17:34:12 **[D]** |
+| Corrección efectiva de diez CVE de Spring | **Pendiente** | La versión instalada 6.2.19 sigue asociada; la corrección 6.2.20 requiere soporte Enterprise (véase §6.9) |
+| SonarQube for IDE en servicio principal | Captura incorporada sobre `UsuarioService.java` | `docs/img/sonarqube-usuario-service.jpg` **[V]** |
+| Evidencia de activación de skill | Dos activaciones automáticas documentadas | §11, `docs/img/skill-activacion-1.png` y `skill-activacion-2.png` **[V]** |
+| Configuración sin bajar umbrales de quality gates | Se conservó `failBuildOnCVSS=7` y cobertura de líneas mínima 0.70 | `pom.xml` **[V]** |
 
-### 9.2 Observaciones
-- Los hallazgos de código verificados en la línea base eran de estilo y mantenimiento (Checkstyle); PMD, CPD y SpotBugs/FindSecBugs no reportaron incidencias y siguen sin hacerlo.
-- Las alertas de OWASP y los errores de configuración de la herramienta son temas separados.
-- El margen de cobertura de líneas sobre el umbral pasó de 1.77 puntos (línea base) a 1.43 puntos (final). Sigue siendo estrecho.
-- Las 16 pruebas pasan sin PostgreSQL local (sección 10.3).
-- La reducción de 47 a 23 CVE detectados mejora la postura de seguridad, pero no elimina todos los riesgos. Los 23 siguen detectados en la ejecución final: 8 activos, 5 por asociación incorrecta y 10 aceptados temporalmente.
-- Las aceptaciones temporales vencen el 2026-12-06 (unos 30 días después de la ejecución final); sin una actualización o una nueva decisión documentada, el gate puede volver a fallar.
+### 9.2 Interpretación de los resultados
 
-### 9.3 Conclusiones y verificaciones pendientes
-- **Conclusión:** en la ejecución final (06/11/2026, 23:55:49), `.\mvnw.cmd -B clean verify` sin omisiones terminó en `BUILD SUCCESS` **[D]**. Checkstyle, PMD, CPD, SpotBugs, JaCoCo (71.43 %) y las 13 pruebas cumplen **[V]**. OWASP aprobó su gate con **5 asociaciones incorrectas excluidas y 10 riesgos aceptados temporalmente**; **no** se corrigieron los 15 CVE, **no** hay cero vulnerabilidades (8 CVE activos con CVSS < 7 y 15 suprimidos) y la aceptación **no** cuenta con aprobación externa.
-- **Historial conservado:** las ejecuciones anteriores con `BUILD FAILURE` de OWASP (23 CVE, 15 con CVSS ≥ 7) y con OWASP omitido se mantienen en las secciones 3, 4.8, 6 y 9.1 como ejecuciones previas.
-- **Antes del 2026-12-06 [P]:** actualizar a versiones corregidas (Spring Framework 7 / Spring Boot 4 o soporte Enterprise) o reevaluar y documentar de nuevo cada aceptación.
-- **Evidencia de consola:** las 15 últimas líneas de la ejecución final (con `All coverage checks have been met`, `BUILD SUCCESS` y fin a las 23:55:49-06:00) están en la sección 4.9, proporcionadas por el desarrollador **[D]**.
-- **Pendiente [P]:** salida completa de la ejecución final (fases de pruebas, analizadores y OWASP) y copia del JSON de OWASP (sección 10).
-- **Pendiente [P]:** inspección del despliegue y reevaluación al incorporar JWT y Spring Security (P3), dependencias reactivas o procesamiento XML.
-- **Pendiente [P]:** validación individual de los 8 CVE activos y token de Sonatype Guide para habilitar OSS Index.
-- **Pendiente [P]:** equivalencia de `config/checkstyle/checkstyle.xml` y `config/pmd/ruleset.xml` con las referencias de la skill.
-- Estado de `NVD_API_KEY`: se usa mediante `${env.NVD_API_KEY}` **[V]**; el valor no se almacena en el repositorio.
+El proyecto consiguió automatizar las verificaciones y eliminar los **19 hallazgos de estilo** sin desactivar reglas. La ampliación de casos negativos permitió comprobar **16 pruebas** con independencia del PostgreSQL local. El margen de cobertura sobre el umbral del 70 % sigue siendo muy pequeño, de **0.15 puntos porcentuales**, por lo que conviene incorporar pruebas que cubran rutas relevantes antes de añadir más código.
 
-## 10. Evidencias pendientes
+El CI exitoso demuestra que se ejecutó `verify` con la configuración actual. **No demuestra que las diez vulnerabilidades de Spring estén remediadas**, porque aún se aplican las diez reglas temporales. La prueba controlada de OWASP del 09/11 confirmó que retirarlas provoca un fallo del gate.
 
-Evidencias que exige la guía paso a paso de IDS y que todavía no están disponibles. Ninguna se declara como completada.
+### 9.3 Conclusión y pendientes reales
 
-| Evidencia | Ubicación esperada | Estado |
+- **Calidad de código y CI:** comprobados en verde para el commit `2881056` de `practica-2` el 09/11/2026.
+- **Pruebas y cobertura:** 16 pruebas aprobadas; 70.15 % de cobertura de líneas en la última medición porcentual local registrada.
+- **Seguridad de dependencias:** 23 CVE detectados en el análisis local original; 8 activas por debajo del umbral, 5 asociaciones incorrectas suprimidas y **10 riesgos temporales no corregidos**.
+- **Pendiente de revisión del instructor:** definir la vía de cierre de los diez CVE altas dentro de Spring Boot 3.5.x, sin confundir supresión con remediación.
+- **Pendiente técnico:** ampliar la cobertura sobre el mínimo; reevaluar CVE al introducir JWT y controles de roles en P3; comprobar las migraciones PostgreSQL reales en un entorno de pruebas apropiado.
+- **Pendiente documental externo a este reporte:** marcar los supuestos de `docs/requerimientos.md` y configurar el datasource mediante `DB_URL`; estas tareas no se declaran completadas aquí.
+
+## 10. Evidencias de la práctica
+
+| Evidencia | Ubicación | Estado |
 |---|---|---|
-| Captura del servicio en SonarQube | `docs/img/sonarqube-usuario-service.jpg` | Captura incorporada (sección 10.1) **[V]**; cubre solo `UsuarioService.java`. Análisis del proyecto completo y modo conectado **[P]** |
-| Últimas 15 líneas de `clean verify -Ddependency-check.skip=true` (`BUILD SUCCESS`, ejecución anterior) | Subsección 10.2 | **[P]** El resultado es **[D]**; falta la salida |
-| Últimas 15 líneas de la ejecución individual de OWASP (`BUILD FAILURE`, ejecución anterior) | Subsección 10.2 | **[P]** El resultado es **[D]**; falta la salida |
-| Últimas 15 líneas de `clean verify` sin omisiones (final, 06/11/2026, 23:55:49) | Subsección 10.2 | Extracto incorporado en la sección 4.9 como evidencia proporcionada por el desarrollador **[D]**; la salida completa no está archivada **[P]** |
-| Copia del `dependency-check-report.json` y `.html` del estado final (23 CVE detectados: 15 suprimidos y 8 activos) | Fuera de `target/` o anexo | **[P]** Se sobrescribe al regenerar |
-| Reportes de los estados de 47 y 27 CVE | — | **[P]** No disponibles; cifras **[D]** |
-| Pruebas sin PostgreSQL local | Subsección 10.3 | 16 pruebas aprobadas con H2 para el arranque **[V]** |
-| Token de Sonatype Guide / OSS Index | — | **[P]** No configurado |
-| Versiones de Maven y Java | Sección 2 | Verificadas para el 07/11/2026 **[V]** |
-| Propuesta de IA rechazada | Sección 8 | Documentada **[D]** (con actualización posterior); registrada en la entrada P2-08 de `BITACORA-IA.md` **[V]** |
-| Tres hallazgos explicados | Sección 5 | Completo, con acción correctiva y resultado **[V]** |
-| Resultados antes/después | Sección 3, 4.8 y 4.9 | Completo para código y pruebas **[V]**; OWASP con motor distinto; extracto de consola final en 4.9 **[D]** |
-| Prompts originales de P2-03 a P2-09 y registros P2-12 a P2-21 | `BITACORA-IA.md`, `prompts/` | **[P]** Pendientes. La bitácora describe las sesiones P2-03 a P2-09 |
+| SonarQube for IDE en la clase principal de servicio | `docs/img/sonarqube-usuario-service.jpg` | Incorporada; analiza solo ese archivo **[V]** |
+| Dos activaciones automáticas de la skill | `docs/img/skill-activacion-1.png`, `skill-activacion-2.png` | Incorporadas (§11) **[V]** |
+| Resultado `mvn verify` con controles activos | [Actions — CI del PR #5](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42716270381) | **`BUILD SUCCESS`** 09/11/2026, 16 pruebas **[V]** |
+| Cobertura porcentual actual | Reporte local del 07/11 | **70.15 % (94/134)**, pendiente de anexar el `jacoco.csv` de esa fecha **[D]** |
+| Prueba OWASP con 15 y con 5 supresiones | Salidas de CMD del 09/11 y §6.9 | Resultados documentados; no se han versionado los logs locales **[D]** |
+| JSON de OWASP posterior al 09/11 | `target/dependency-check-report.json` | Analizado; no archivado fuera de `target/` **[P]** |
+| Capturas de ejecuciones históricas con OWASP omitido | No disponibles | Se conservan como referencias históricas, no como evidencia del CI final **[P]** |
+| Rechazo efectivo de IA | §8 y `BITACORA-IA.md`, P2-06 | Documentado y contrastable con `pom.xml` **[V]** |
+| Tres hallazgos explicados | §5 | Completos, con problema, decisión y resultado |
+| Prompts originales de algunas sesiones de P2 | `prompts/` | No todos están archivados **[P]** |
 
 ### 10.1 Evidencia de SonarQube for IDE
 
 ![UsuarioService.java abierto con el panel SonarQube Findings](img/sonarqube-usuario-service.jpg)
 
-El 07/11/2026 SonarQube for IDE 6.2.0 analizó `UsuarioService.java` con Java 21. El registro identifica el archivo y concluye `Analysis detected 0 issues and 0 Security Hotspots in 1032ms` **[V]**. La captura muestra la clase de servicio principal y el panel sin hallazgos.
+El 07/11/2026 SonarQube for IDE 6.2.0 analizó `UsuarioService.java` con Java 21. El registro de la extensión identificó el archivo y concluyó `Analysis detected 0 issues and 0 Security Hotspots in 1032ms`. La captura es evidencia del análisis de la clase solicitada, **no un escaneo integral del proyecto**.
 
-### 10.2 Salida de las ejecuciones de Maven (últimas 15 líneas)
+### 10.2 Ejecuciones Maven y resultados
 
-Resultados reportados por el desarrollador **[D]**. De las ejecuciones anteriores no hay salida de consola en el repositorio. Para la ejecución final, el extracto de 15 líneas está en la sección 4.9 y no se repite aquí:
-
-| Ejecución | Comando | Resultado | Salida (15 líneas) |
+| Fecha | Comando / entorno | Resultado | Interpretación |
 |---|---|---|---|
-| Build con OWASP omitido (ejecución anterior) | `.\mvnw.cmd -B clean verify -Ddependency-check.skip=true` | `BUILD SUCCESS` **[D]** | **[P]** |
-| OWASP individual (ejecución anterior, sin suppressions) | Comando exacto **[P]** (umbral CVSS 7) | `BUILD FAILURE` por CVSS ≥ 7 **[D]** | **[P]** |
-| Build completo sin omisiones (**final**, 06/11/2026, 23:55:49, UTC-06:00) | `.\mvnw.cmd -B clean verify` | **`BUILD SUCCESS`** **[D]**; 13 pruebas, JaCoCo y OWASP aprobados | Sección 4.9 (extracto proporcionado por el desarrollador **[D]**) |
-
-_Pendiente [P]: las últimas 15 líneas de las dos ejecuciones anteriores, con comando y fecha. No se inventa ni se reconstruye su salida de consola._
+| 06/11 | `mvnw.cmd -B clean verify -Ddependency-check.skip=true` | `BUILD SUCCESS` histórico | OWASP omitido; **no demuestra el quality gate completo** |
+| 06/11 | `mvnw.cmd -B clean verify` con supresiones | `BUILD SUCCESS`, entonces 13 pruebas | Ejecución histórica anterior a la ampliación de tests; extracto en §4.9 |
+| 07/11 | `mvnw.cmd -B verify` local, perfil H2 | **16 pruebas, 70.15 % de líneas, `BUILD SUCCESS`** | Verificación ampliada con los gates activos (§10.3) |
+| 09/11 | `./mvnw -B verify` en GitHub Actions | **16 pruebas, `BUILD SUCCESS`** | Verificación reproducible en runner remoto (§10.4) |
+| 09/11, 17:12 | `mvnw.cmd -B dependency-check:check` con 15 supresiones | `BUILD SUCCESS` | Supresiones originales vigentes; no equivale a CVE corregidos |
+| 09/11, 17:34 | Mismo comando, solo 5 supresiones | **`BUILD FAILURE`** | Diez CVE con CVSS ≥ 7 bloquean; archivo restaurado después (§6.9) |
 
 ### 10.3 Pruebas sin PostgreSQL local
 
-La prueba de contexto activa el perfil `test` y usa H2 en memoria con alcance de prueba. Hibernate genera el esquema en ese perfil. Flyway queda deshabilitado en el perfil de prueba porque V1 usa SQL específico de PostgreSQL. La prueba comprueba el arranque con JPA. La validación histórica de V1 consta en la sección 4.9.
+La prueba de contexto activa el perfil `test` y usa H2 en memoria. Hibernate genera el esquema de prueba y Flyway queda deshabilitado en ese perfil porque la migración V1 contiene SQL específico de PostgreSQL. **Esta prueba confirma el arranque y la integración con JPA bajo H2, no la compatibilidad de Flyway V1 en PostgreSQL.** La validación de V1 con PostgreSQL real se realizó anteriormente y se documentó en la bitácora de P1.
 
-El 07/11/2026 se verificó que el puerto 5432 estaba libre y se retiraron las variables `DB_USERNAME`, `DB_PASSWORD` y `DB_URL` del proceso de Maven. Las 16 pruebas pasaron con cero fallos, errores u omisiones. Se agregaron tres casos de servicio: actualizar y eliminar un usuario inexistente y actualizar a un correo duplicado. Hikari registró una conexión a `jdbc:h2:mem:ms-usuarios` **[V]**. Se usaron Maven 3.10.0 y Java 21.0.13. En el entorno de verificacion se precargó Mockito mediante `JAVA_TOOL_OPTIONS` porque Windows bloqueó el enlace dinámico del agente. La misma variable dirigió los archivos temporales de Java a `target/p2-java-tmp` para que OWASP pudiera escribir su índice. El comando `mvnw.cmd -B verify` terminó en `BUILD SUCCESS` a las 00:36:17 (UTC−06:00), con todos los controles activos. Checkstyle, PMD, CPD y SpotBugs pasaron. JaCoCo alcanzó **70.15 %** (94/134 líneas), frente a 68.66 % (92/134) con H2 antes de añadir los tres casos. OWASP reportó 8 CVE activos y 15 suprimidos bajo las decisiones documentadas en la sección 6.
+El 07/11/2026 se verificó que el puerto 5432 estaba libre y se retiraron las variables `DB_USERNAME`, `DB_PASSWORD` y `DB_URL` del proceso Maven. Pasaron **16 pruebas**, sin fallos, errores ni omitidas; se habían añadido tres casos negativos al servicio: actualizar usuario inexistente, eliminar usuario inexistente y actualizar un correo duplicado. Hikari registró la conexión `jdbc:h2:mem:ms-usuarios`. En ese entorno se configuró `JAVA_TOOL_OPTIONS` para precargar el agente Mockito y utilizar `target/p2-java-tmp` como directorio temporal de Java. El comando `mvnw.cmd -B verify` terminó en **`BUILD SUCCESS`** a las 00:36:17 (UTC−06:00). El reporte local de JaCoCo registró **70.15 % de líneas (94/134)**, frente a 68.66 % (92/134) antes de las tres pruebas; OWASP continuó utilizando las 15 supresiones documentadas.
+
+### 10.4 Ejecución de GitHub Actions (09/11/2026)
+
+El workflow `.github/workflows/ci.yml` se ejecutó en la rama `practica-2`, commit **`28810568b89165fb3aaea30111d4a55d63900e2c`**, mediante un evento `pull_request`. La [ejecución `ci-miguel` #42716270381](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42716270381) terminó en **success** el 09/11/2026. El job `verify` usó Java 21 y ejecutó `./mvnw -B verify` con el secreto `NVD_API_KEY` suministrado a través del entorno, sin registrarlo en texto.
+
+El log contiene:
+
+```text
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0
+[INFO] All coverage checks have been met.
+[INFO] BUILD SUCCESS
+```
+
+También aparece `You have 0 Checkstyle violations.` y la ejecución de Dependency-Check 13.0.0. **El log no publica el porcentaje de JaCoCo** ni demuestra que se hayan corregido las diez CVE temporalmente aceptadas. OSS Index permaneció inactivo por ausencia de credenciales de Sonatype; se mantuvo la consulta a NVD.
 
 ## 11. Activación automática del Skill `quality-gates-java`
 
