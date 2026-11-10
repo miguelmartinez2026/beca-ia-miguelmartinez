@@ -1,14 +1,14 @@
 Reporte de calidad — ms-usuarios
 Práctica: P2 — Calidad como código con instrucciones y skills
 Fecha de línea base: 06/11/2026
-Última actualización documental: 10/11/2026 (JaCoCo y 18 pruebas Surefire confirmadas localmente)
+Última actualización documental: 09/11/2026 (hora de Ciudad de México, UTC−06:00; cierre local y CI del PR #5)
 Rama de trabajo: practica-2
 Alcance: Java 21, Spring Boot 3.5.16, Maven y análisis de calidad de ms-usuarios.
 
-Estado ejecutivo: El 09/11/2026 GitHub Actions ejecutó ./mvnw -B verify en la rama practica-2 y terminó en BUILD SUCCESS, con 16 pruebas aprobadas, cero fallos, cero errores y cero omitidas; Checkstyle, PMD, CPD, SpotBugs/FindSecBugs, OWASP y JaCoCo se ejecutaron con la configuración de ese commit. Evidencia de CI, PR #5. Posteriormente, el desarrollador incorporó dos pruebas unitarias (18 casos definidos en total) y compartió una nueva captura del reporte local de JaCoCo del 10/11/2026: 77.78 % de líneas (98/126), superando el umbral de 70 % por 7.78 puntos porcentuales. La captura acredita el porcentaje de JaCoCo y la salida posterior de cuatro reportes Surefire confirma 18 pruebas aprobadas, 0 fallos, 0 errores y 0 omitidas. Sigue pendiente comprobar el cierre BUILD SUCCESS de esta misma ejecución de clean verify y el CI posterior al nuevo commit.
+Estado ejecutivo: El 09/11/2026 a las 19:02:34 (UTC−06:00), la ejecución local mvnw.cmd -B clean verify concluyó con BUILD SUCCESS, 18 pruebas aprobadas, 0 fallos, 0 errores y 0 omitidas, y el gate de JaCoCo satisfecho. El reporte local de JaCoCo mostró 77.78 % de cobertura de líneas (98/126); también indicó 75 % de instrucciones (402/530) y 46 % de ramas (15/32). GitHub Actions validó el commit 62fbd69 de practica-2 con ./mvnw -B verify: 18 pruebas aprobadas, Checkstyle con 0 violaciones, SpotBugs sin incidencias y BUILD SUCCESS (CI #42733267317). El CI confirma que JaCoCo superó el mínimo de 70 %, pero no publica el porcentaje exacto; esa cifra se obtuvo del reporte local y la captura compartida durante la revisión, no archivada en GitHub.
 
 Advertencia de seguridad: el resultado de OWASP no implica ausencia de vulnerabilidades. En el análisis local del 09/11/2026 permanecen 23 CVE detectados: 8 activos con CVSS inferior a 7 y 15 suprimidos. De las supresiones, 5 corresponden a asociaciones incorrectas de componentes y 10 a aceptaciones temporales de riesgo que vencen el 06/12/2026; estas diez CVE no están corregidas. Al retirarlas en una prueba controlada, OWASP terminó en BUILD FAILURE por CVSS de 7.5 a 9.8. Se restauró el archivo original después de la prueba. Las decisiones y la evidencia figuran en las secciones 6.4, 6.8 y 6.9.
-Lectura de resultados: la ejecución local más reciente de Surefire confirma 18 pruebas aprobadas, sin fallos, errores ni omisiones: controlador (8), servicio (8), DTO (1) y contexto (1). JaCoCo muestra 77.78 % de cobertura de líneas (98/126) el 10/11. El último CI confirmado sigue siendo el del 09/11 con 16 pruebas. Las cifras anteriores (13 pruebas y 71.43 % del 06/11; 16 pruebas y 70.15 % del 07/11) se mantienen como historial, no como métricas vigentes.
+Lectura de resultados: el estado actual es 18 pruebas aprobadas y 77.78 % de cobertura de líneas (medición local del 09/11/2026). El CI posterior al commit también aprobó las 18 pruebas (run #42733267317). Las cifras de 13 pruebas/71.43 % (06/11) y 16 pruebas/70.15 % (07/11) se conservan exclusivamente como historial. La cobertura exacta del runner de GitHub Actions no se dispone en el log.
 
 Convención de evidencia
 Marca	Significado
@@ -17,7 +17,7 @@ Marca	Significado
 [P]	Verificación o corrección pendiente.
 
 
-El reporte combina la línea base del 06/11, una ejecución local ampliada del 07/11, el CI y las pruebas controladas de OWASP del 09/11, y la captura de JaCoCo aportada el 10/11. No se deben atribuir métricas de una fecha a otra ni interpretar una captura de JaCoCo como evidencia de pruebas aprobadas. Los archivos generados en target/ pueden sobrescribirse al volver a ejecutar Maven; los registros de CI quedan disponibles en GitHub.
+El reporte combina la línea base del 06/11, una ejecución local ampliada del 07/11, el diagnóstico de OWASP del 09/11 y el cierre local y de CI del 09/11. La captura de JaCoCo se revisó en esta conversación pero no se incorporó al repositorio. Los valores de cobertura están transcritos en la sección 10.5; no se incluye ningún enlace a un archivo de imagen inexistente. Los reportes de target/ pueden sobrescribirse en futuras ejecuciones, mientras que los logs de CI permanecen disponibles en GitHub.
 1. Objetivo y alcance
 Objetivo: establecer la línea base de calidad de ms-usuarios antes de corregir hallazgos, documentar con evidencia los resultados antes y después de cada corrección, y consolidar el estado final de la práctica.
 
@@ -48,21 +48,21 @@ Reglas de Checkstyle activas [V]: LineLength (120), UnusedImports, MagicNumber, 
 
 Verificación del 07/11/2026 [V]: Maven 3.10.0 mediante el Wrapper y Java 21.0.13. Las versiones de las ejecuciones históricas quedan pendientes.
 3. Comparación antes y después
-La columna «Antes» describe la línea base del 06/11/2026. La columna «Estado más reciente» separa los controles comprobados en CI el 09/11 de la ejecución local del 10/11, con medición visual de JaCoCo y cuatro reportes de Surefire; el mensaje final de Maven y un nuevo CI aún no están documentados.
+La columna «Antes» describe la línea base del 06/11/2026. La columna «Estado más reciente» resume la ejecución local y el CI #42733267317 del 09/11/2026 (UTC−06:00), que confirmaron 18 pruebas exitosas y los quality gates de Maven.
 Herramienta o control	Antes (06/11, línea base)	Estado más reciente y evidencia	Evaluación
 Checkstyle	19 violaciones: 8 MagicNumber, 7 LineLength, 4 MultipleStringLiterals	0 violaciones; CI 09/11 confirmó el paso de checkstyle:check [V]	Corregido
 PMD	0 violaciones	Sin infracciones bloqueantes; CI verify exitoso [V]	Cumple
 CPD	0 duplicaciones sobre el umbral de 80 tokens	Sin duplicaciones bloqueantes; CI verify exitoso [V]	Cumple
 SpotBugs / FindSecBugs	0 incidencias	Control superado en CI [V]	Cumple
-JaCoCo — líneas (umbral ≥ 70 %)	71.77 % (89/124) [V]	77.78 % (98/126) en captura local del 10/11 [V]; anteriormente 70.15 % (94/134) el 07/11 [D] y gate aprobado en CI 09/11 [V]	Supera el umbral por 7.78 puntos; build nuevo pendiente de confirmar
-JaCoCo — instrucciones y ramas	68.3 % de instrucciones; 34.4 % de ramas [V]	Captura 10/11: 75 % de instrucciones (402/530), 46 % de ramas (15/32), como los muestra JaCoCo [V]	Informativo; no son los umbrales exigidos
-Pruebas automatizadas	13 aprobadas, 0 fallos [V]	16 aprobadas en CI del 09/11 [V]; 18 aprobadas localmente tras añadir dos pruebas de servicio; 0 fallos, 0 errores y 0 omitidas en los cuatro archivos Surefire [V]	Total local confirmado; CI nuevo pendiente
+JaCoCo — líneas (umbral ≥ 70 %)	71.77 % (89/124) [V]	77.78 % (98/126) en reporte local del 09/11 [V]; anteriormente 70.15 % (94/134) el 07/11 [D]; gate aprobado en el CI final [V]	Supera el umbral por 7.78 puntos; CI confirma el gate, no el porcentaje
+JaCoCo — instrucciones y ramas	68.3 % de instrucciones; 34.4 % de ramas [V]	Reporte local 09/11: 75 % de instrucciones (402/530), 46 % de ramas (15/32) [V]	Informativo; no son los umbrales exigidos
+Pruebas automatizadas	13 aprobadas, 0 fallos [V]	18 aprobadas, 0 fallos, 0 errores y 0 omitidas tanto en Surefire local como en CI #42733267317 [V]	Verificado localmente y en CI
 OWASP — dependencias afectadas	10 dependencias con alertas en Dependency-Check 12.1.0 (71 escaneadas, 49 únicas) [V]	3 con CVE identificadas en el reporte 13.0.0 del 09/11: spring-core, spring-data-jpa, spring-security-crypto [V]	Hay vulnerabilidades pendientes
 OWASP — CVE detectados	70 asociaciones dependencia-CVE en la línea base; no son 70 CVE únicos	23 CVE detectados: 8 activos + 15 suprimidos, según JSON del 09/11 [V]	Persisten riesgos
 OWASP — supresiones	0 en la línea base	5 asociaciones de módulo incorrectas + 10 aceptaciones temporales. La ejecución sin estas últimas falló por 10 CVE con CVSS ≥ 7 [V]	Observación del instructor pendiente de aprobación
 OWASP — gate de Maven	BUILD FAILURE antes de gestionar CVE [D]	BUILD SUCCESS con 15 supresiones; BUILD FAILURE con solo 5, en prueba local del 09/11 [D]	Aprobación condicionada por supresiones
 SonarQube for IDE	Sin captura al inicio	Captura en docs/img/sonarqube-usuario-service.jpg, sobre UsuarioService.java [V]	Evidencia del archivo solicitado
-Integración continua	Sin workflow	.github/workflows/ci.yml; CI verde en practica-2 el 09/11, ejecutando verify sin opción de omitir OWASP [V]	Incorporado
+Integración continua	Sin workflow	.github/workflows/ci.yml; CI #42733267317 exitoso el 09/11 (UTC−06:00) con 18 pruebas y los quality gates activos [V]	Incorporado y verificado
 
 
 Nota histórica: el 06/11, tras corregir los hallazgos de Checkstyle y antes de ampliar los tests, se registraron 13 pruebas y 71.43 % (90/126 líneas). Son resultados intermedios, no el estado final. El histórico de OWASP pasó de 47 a 27 y luego a 23 CVE según las ejecuciones descritas en la sección 6.4, con limitaciones de conservación de sus reportes.
@@ -95,19 +95,19 @@ El umbral de 70 % se aplica a líneas. Clases con menor cobertura de líneas: Ap
 4.7 Procedencia y cronología de los resultados
 La línea base del 06/11 se tomó de reportes de target/ producidos durante el diagnóstico inicial. Las correcciones de estilo eliminaron las 19 violaciones de Checkstyle. La ejecución local completa del 06/11 pasó con 13 pruebas y 71.43 % de líneas, pero quedó superada por las tres pruebas negativas incorporadas después.
 
-El 07/11 se ejecutó mvnw.cmd -B verify con el perfil H2 para la prueba de contexto, sin PostgreSQL local, y se registraron 16 pruebas y 70.15 % de cobertura de líneas (94/134). El 09/11 GitHub Actions ejecutó ./mvnw -B verify, confirmó las 16 pruebas y terminó en BUILD SUCCESS, con los controles Maven activos. El 10/11 el desarrollador compartió una captura del reporte local actualizado de JaCoCo con 77.78 % de líneas (98/126) después de añadir dos pruebas al servicio. El resultado de Surefire se verificó por separado con los cuatro archivos .txt: 18 pruebas, 0 fallos, 0 errores y 0 omitidas. Aún falta comprobar el mensaje final de Maven (BUILD SUCCESS) de esa ejecución. La diferencia de denominadores (134 frente a 126 líneas) impide atribuir íntegramente el aumento porcentual de 7.63 puntos a las nuevas pruebas sin comparar los reportes de clases y exclusiones.
-4.8 Resultados comprobables (CI 09/11 y JaCoCo local 10/11/2026)
+El 07/11 se ejecutó mvnw.cmd -B verify con H2 para la prueba de contexto, sin PostgreSQL local, y se registraron 16 pruebas y 70.15 % de líneas (94/134). El 09/11, un primer CI aprobó esas 16 pruebas. Después se añadieron dos pruebas de servicio, sin modificar código de producción. La verificación local mvnw.cmd -B clean verify concluyó con 18 pruebas, BUILD SUCCESS y 77.78 % de cobertura de líneas (98/126) el 09/11/2026 a las 19:02:34 (UTC−06:00). El CI posterior #42733267317, sobre el commit 62fbd69, aprobó también las 18 pruebas y el gate de JaCoCo. La diferencia de denominadores (134 frente a 126 líneas) impide atribuir íntegramente el aumento porcentual de 7.63 puntos a las dos pruebas sin comparar los reportes de clases y exclusiones.
+4.8 Resultados comprobables (cierre local y CI del 09/11/2026)
 Control	Estado	Fuente
-Checkstyle	0 violaciones	Log del CI del PR #5 [V]
+Checkstyle	0 violaciones	Log del CI final del PR #5 [V]
 PMD y CPD	Gates aprobados	mvn verify en CI [V]
 SpotBugs / FindSecBugs	Gate aprobado	mvn verify en CI [V]
-Pruebas	18 aprobadas localmente (10/11): controlador (8), servicio (8), DTO (1), contexto (1); fallos 0, errores 0, omitidas 0. El CI 09/11 había ejecutado 16	Cuatro reportes target/surefire-reports/*.txt aportados por el desarrollador [V]; CI 09/11 [V]
-JaCoCo	77.78 % de líneas (98/126) en la captura local del 10/11; 75 % de instrucciones (402/530) y 46 % de ramas (15/32). Se conserva como histórico el 70.15 % (94/134) del 07/11	Captura local 10/11, figura en §10.5 [V]; CI 09/11 [V]
+Pruebas	18 aprobadas localmente y en CI: controlador (8), servicio (8), DTO (1), contexto (1); fallos 0, errores 0, omitidas 0	Surefire local y CI #42733267317 [V]
+JaCoCo	77.78 % de líneas (98/126) en medición local 09/11; 75 % de instrucciones (402/530) y 46 % de ramas (15/32). Historial: 70.15 % (94/134) el 07/11	Contadores locales transcritos en §10.5 [V]; gate aprobado en CI #42733267317 [V]
 OWASP Dependency-Check 13.0.0	BUILD SUCCESS con 15 supresiones en el análisis local del 09/11 a las 17:12:06; BUILD FAILURE con solo 5 supresiones a las 17:34:12	Salidas locales del 09/11, detalle §6.9 [D]
-CI completo	BUILD SUCCESS, workflow ci-miguel, commit 2881056	Run #42716270381 [V]
+CI completo	BUILD SUCCESS, workflow ci-miguel, commit 62fbd69, 18 pruebas	Run #42733267317 [V]
 
 
-La composición del reporte OWASP con las supresiones originales del 09/11 era de 23 CVE detectados, distribuidos en 15 suprimidos y 8 activos. Los diez CVE temporalmente aceptados están pendientes de corrección de versión. La prueba con cinco supresiones se hizo localmente; después se restauró el XML original. La captura de JaCoCo del 10/11 no es una nueva auditoría OWASP.
+La composición del reporte OWASP con las supresiones originales del 09/11 era de 23 CVE detectados, distribuidos en 15 suprimidos y 8 activos. Los diez CVE temporalmente aceptados están pendientes de corrección de versión. La prueba con cinco supresiones se hizo localmente; después se restauró el XML original. La captura de JaCoCo del 09/11 no es una nueva auditoría OWASP.
 4.9 Evidencia histórica del 06/11 y verificación posterior
 El 06/11/2026 a las 23:55:49 (UTC−06:00) se registró un clean verify satisfactorio antes de ampliar las pruebas. Se conserva su extracto para trazabilidad; no es la última verificación funcional.
 [INFO]
@@ -385,12 +385,12 @@ P2-17 a P2-20 — Suppressions de identificación incorrecta	config/owasp-suppre
 P2-22 — Aceptación temporal de riesgos	config/owasp-suppressions.xml (10 reglas), docs/QUALITY-REPORT.md (sección 6.8), BITACORA-IA.md; vencimiento 2026-12-06	—	10 CVE bajo aceptación temporal [V] (archivo y JSON)	Aplicado
 P2-23 — Informe del 06/11	docs/QUALITY-REPORT.md, BITACORA-IA.md	13 pruebas aprobadas, estado histórico	clean verify exitoso con 15 supresiones y 8 CVE activas	Aplicado
 07/11 — Pruebas adicionales	UsuarioServiceTest.java, perfil H2 de contexto	16 aprobadas, 0 fallos, 0 errores, 0 omitidas	Cobertura 70.15 % (94/134) en verificación local	Aplicado
-09/11 — CI	.github/workflows/ci.yml	16 pruebas aprobadas en Actions	./mvnw -B verify: BUILD SUCCESS, gates activos	Aplicado
+09/11 — CI inicial	.github/workflows/ci.yml	16 pruebas aprobadas en Actions	./mvnw -B verify: BUILD SUCCESS, gates activos	Aplicado
 09/11 — Revisión OWASP	Análisis local y actualización documental	No modifica las pruebas	Con 15 supresiones: BUILD SUCCESS; con solo 5: BUILD FAILURE. Se restauró el XML original	Diagnóstico documentado; riesgo pendiente
-10/11 — Refuerzo de pruebas	UsuarioServiceTest.java; señalización documental en docs/requerimientos.md	2 casos adicionales, 18 pruebas aprobadas localmente; 0 fallos, 0 errores, 0 omitidas	JaCoCo local: 77.78 % de líneas (98/126); reporte de CI posterior pendiente	Medición local documentada [V]
+09/11 — Refuerzo de pruebas	UsuarioServiceTest.java; marcas SUPUESTO en docs/requerimientos.md	2 casos adicionales, 18 pruebas aprobadas, 0 fallos, 0 errores, 0 omitidas	clean verify local: BUILD SUCCESS, JaCoCo 77.78 % (98/126); CI posterior BUILD SUCCESS	Validado localmente y en CI [V]
 
 
-En los lotes P2-04 a P2-23 no se modificaron pruebas, migraciones Flyway, servicios, repositorios ni endpoints. Posteriormente se añadieron tres pruebas negativas (07/11) y otras dos pruebas de servicio (10/11), sin modificar rutas ni esquema. Ninguna regla de calidad se desactivó y no se usó @SuppressWarnings [V]. Las suppressions de OWASP existen únicamente en config/owasp-suppressions.xml (15 reglas: 5 de asociación incorrecta y 10 de aceptación temporal), referenciado desde suppressionFiles en pom.xml; failBuildOnCVSS=7 se conserva y no se declara ossIndexServerId [V].
+En los lotes P2-04 a P2-23 no se modificaron pruebas, migraciones Flyway, servicios, repositorios ni endpoints. Posteriormente se añadieron tres pruebas negativas (07/11) y otras dos pruebas de servicio (09/11), sin modificar rutas ni esquema. Ninguna regla de calidad se desactivó y no se usó @SuppressWarnings [V]. Las suppressions de OWASP existen únicamente en config/owasp-suppressions.xml (15 reglas: 5 de asociación incorrecta y 10 de aceptación temporal), referenciado desde suppressionFiles en pom.xml; failBuildOnCVSS=7 se conserva y no se declara ossIndexServerId [V].
 
 Los cambios documentales de la línea base fueron prompts/P2-02-diagnostico-calidad.md, la entrada P2-02 de BITACORA-IA.md y este reporte. Las entradas P2-03 a P2-09 constan en la bitácora. Los prompts originales de esas sesiones y los registros P2-12 a P2-21 quedan pendientes [P].
 8. Propuesta de IA rechazada y alternativa adoptada
@@ -406,10 +406,10 @@ Evidencia: BITACORA-IA.md (P2-06 y P2-08), pom.xml, configuración de Dependency
 9. Validación final y conclusiones
 9.1 Verificación del estado más reciente
 Criterio	Resultado	Evidencia / límite
-./mvnw -B verify en CI sin omitir analizadores	BUILD SUCCESS	GitHub Actions del 09/11/2026, rama practica-2, commit 2881056; ejecución [V]
+./mvnw -B verify en CI sin omitir analizadores	BUILD SUCCESS	GitHub Actions del 09/11/2026, practica-2, commit 62fbd69; CI #42733267317 [V]
 Checkstyle, PMD/CPD y SpotBugs/FindSecBugs	Gates aprobados; Checkstyle reportó 0 violaciones	Log de CI [V]
-Pruebas automatizadas	18 aprobadas en Surefire local actualizado (0 fallos, 0 errores, 0 omitidas); 16 aprobadas en el último CI verificado	Salida findstr de los cuatro archivos Surefire [V]; CI del 09/11 [V]
-JaCoCo — líneas ≥ 70 %	77.78 % (98/126) en la captura local del 10/11; umbral 70 %, margen 7.78 puntos; CI anterior aprobado	§10.5 y captura 10/11 [V]; gate de CI 09/11 [V]
+Pruebas automatizadas	18 aprobadas, 0 fallos, 0 errores y 0 omitidas localmente y en el último CI	Reportes Surefire locales y CI #42733267317 [V]
+JaCoCo — líneas ≥ 70 %	77.78 % (98/126) en el reporte local; umbral 70 %, margen 7.78 puntos; gate CI aprobado	§10.5, contadores locales transcritos [V]; CI #42733267317 [V]
 OWASP Dependency-Check 13.0.0	Gate aprobado con 15 supresiones; ocho CVE activas bajo el umbral	JSON local 09/11 y log de CI [D]/[V]
 OWASP sin diez aceptaciones temporales	BUILD FAILURE, diez CVE bloqueantes con CVSS 7.5–9.8	Salida de CMD del 09/11 a las 17:34:12 [D]
 Corrección efectiva de diez CVE de Spring	Pendiente	La versión instalada 6.2.19 sigue asociada; la corrección 6.2.20 requiere soporte Enterprise (véase §6.9)
@@ -419,22 +419,22 @@ Configuración sin bajar umbrales de quality gates	Se conservó failBuildOnCVSS=
 
 
 9.2 Interpretación de los resultados
-El proyecto consiguió automatizar las verificaciones y eliminar los 19 hallazgos de estilo sin desactivar reglas. La ampliación de casos negativos permitió comprobar 16 pruebas en el CI del 09/11 sin depender de PostgreSQL local. Dos nuevas pruebas quedaron definidas y se ejecutaron satisfactoriamente el 10/11 para las rutas listar y eliminar. La nueva captura de JaCoCo muestra 77.78 % de líneas, un margen de 7.78 puntos porcentuales sobre el umbral frente al de 0.15 puntos de la medición histórica del 07/11. La cantidad de líneas consideradas por JaCoCo cambió de 134 a 126; por ello, la mejora porcentual no demuestra por sí sola el impacto exclusivo de las nuevas pruebas. Los cuatro reportes de Surefire confirman 18 pruebas aprobadas y sin omisiones. Falta revisar el BUILD SUCCESS del clean verify posterior.
+El proyecto consiguió automatizar los análisis y eliminar las 19 violaciones de Checkstyle sin desactivar reglas. Después de las tres pruebas negativas, el CI inicial comprobó 16 casos; dos nuevas pruebas de listar() y eliminar() elevaron a 18 pruebas aprobadas el resultado local y el del CI final #42733267317. La cobertura local de líneas fue 77.78 % (98/126), esto es 7.78 puntos por encima del mínimo de 70 %. El aumento respecto al 70.15 % anterior no puede atribuirse por completo a las nuevas pruebas, dado que el denominador de líneas cambió de 134 a 126. El clean verify local y el verify del CI concluyeron en BUILD SUCCESS. La captura local de JaCoCo fue revisada, pero no se adjuntó al repositorio.
 
 El CI exitoso demuestra que se ejecutó verify con la configuración actual. No demuestra que las diez vulnerabilidades de Spring estén remediadas, porque aún se aplican las diez reglas temporales. La prueba controlada de OWASP del 09/11 confirmó que retirarlas provoca un fallo del gate.
 9.3 Conclusión y pendientes reales
-- Calidad de código y CI: comprobados en verde para el commit 2881056 de practica-2 el 09/11/2026.
-- Pruebas y cobertura: 18 pruebas aprobadas en los reportes locales Surefire del 10/11 (0 fallos, 0 errores, 0 omitidas); 16 aprobadas en el último CI verificado (09/11); 77.78 % de líneas (98/126) en la captura de JaCoCo. Queda por confirmar el mensaje final de clean verify y un nuevo CI con las dos pruebas.
+- Calidad de código y CI: verificados en verde para el commit 62fbd69 de practica-2 el 09/11/2026 (UTC−06:00); CI #42733267317.
+- Pruebas y cobertura: 18 pruebas aprobadas en clean verify local y en el CI posterior (0 fallos, 0 errores, 0 omitidas); 77.78 % de líneas (98/126) en JaCoCo local, con gate aprobado también por CI. El porcentaje exacto de la ejecución en GitHub Actions no aparece en el log.
 - Seguridad de dependencias: 23 CVE detectados en el análisis local original; 8 activas por debajo del umbral, 5 asociaciones incorrectas suprimidas y 10 riesgos temporales no corregidos.
 - Pendiente de revisión del instructor: definir la vía de cierre de los diez CVE altas dentro de Spring Boot 3.5.x, sin confundir supresión con remediación.
-- Pendiente técnico: confirmar el resultado final BUILD SUCCESS de clean verify, revisar la variación de líneas incluidas en JaCoCo, reevaluar CVE al introducir JWT y roles en P3 y comprobar migraciones PostgreSQL reales en un entorno de pruebas apropiado.
-- Correcciones locales posteriores al último CI verificado: el desarrollador reportó la incorporación de marcas **SUPUESTO:** en docs/requerimientos.md y la sustitución de la URL fija por ${DB_URL} en application.yaml; la modificación de DB_URL produjo un mvnw.cmd -B verify local satisfactorio con 16 pruebas el 09/11. La inclusión final de ambos cambios en CI y en el PR requiere comprobación posterior.
+- Pendiente técnico: revisar la variación de líneas incluidas en JaCoCo, reevaluar las CVE al introducir JWT y roles en P3 y comprobar las migraciones de PostgreSQL reales en un entorno de pruebas apropiado.
+- Configuración pendiente en la rama: la revisión del repositorio practica-2 mostró que src/main/resources/application.yaml todavía tiene la URL jdbc:postgresql://localhost:5432/ms_usuarios_db fija. El cambio local a ${DB_URL} había superado mvnw.cmd -B verify con 16 pruebas, pero no consta en el commit 62fbd69; debe versionarse por separado. Las marcas SUPUESTO sí figuran en docs/requerimientos.md.
 10. Evidencias de la práctica
 Evidencia	Ubicación	Estado
 SonarQube for IDE en la clase principal de servicio	docs/img/sonarqube-usuario-service.jpg	Incorporada; analiza solo ese archivo [V]
 Dos activaciones automáticas de la skill	docs/img/skill-activacion-1.png, skill-activacion-2.png	Incorporadas (§11) [V]
-Resultado mvn verify con controles activos	Actions — CI del PR #5	BUILD SUCCESS 09/11/2026, 16 pruebas [V]
-Cobertura porcentual actual	Captura de JaCoCo 10/11: docs/img/jacoco-2026-11-10.png	77.78 % (98/126 líneas), según la fila Total [V]; Surefire local recibido con 18 pruebas correctas [V]; CSV y log final del build no adjuntos [P]
+Resultado mvn verify con controles activos	Actions — CI final del PR #5	BUILD SUCCESS, commit 62fbd69, 18 pruebas [V]
+Cobertura porcentual actual	§10.5: contadores transcritos de target/site/jacoco/index.html (captura local no versionada)	77.78 % (98/126 líneas) [V]; no se incluye enlace a ninguna captura inexistente en GitHub; CI confirma el gate, no el porcentaje
 Prueba OWASP con 15 y con 5 supresiones	Salidas de CMD del 09/11 y §6.9	Resultados documentados; no se han versionado los logs locales [D]
 JSON de OWASP posterior al 09/11	target/dependency-check-report.json	Analizado; no archivado fuera de target/ [P]
 Capturas de ejecuciones históricas con OWASP omitido	No disponibles	Se conservan como referencias históricas, no como evidencia del CI final [P]
@@ -454,7 +454,8 @@ Fecha	Comando / entorno	Resultado	Interpretación
 09/11	./mvnw -B verify en GitHub Actions	16 pruebas, BUILD SUCCESS	Verificación reproducible en runner remoto (§10.4)
 09/11, 17:12	mvnw.cmd -B dependency-check:check con 15 supresiones	BUILD SUCCESS	Supresiones originales vigentes; no equivale a CVE corregidos
 09/11, 17:34	Mismo comando, solo 5 supresiones	BUILD FAILURE	Diez CVE con CVSS ≥ 7 bloquean; archivo restaurado después (§6.9)
-10/11	Captura de target/site/jacoco/index.html tras modificar las pruebas	77.78 % (98/126 líneas)	Evidencia de cobertura; Surefire confirma 18 pruebas correctas. El resultado final BUILD SUCCESS de Maven aún no se adjuntó (§10.5)
+09/11, 19:02 (UTC−06:00)	mvnw.cmd -B clean verify local y reporte target/site/jacoco/index.html	18 pruebas, BUILD SUCCESS, JaCoCo 77.78 % (98/126)	Verificación completa con gates activos; captura local examinada, no versionada (§10.5)
+09/11, 19:06 (UTC−06:00)	./mvnw -B verify en CI #42733267317	18 pruebas, BUILD SUCCESS, gate JaCoCo aprobado	Ejecución reproducible en GitHub Actions sobre 62fbd69
 
 
 10.3 Pruebas sin PostgreSQL local
@@ -469,16 +470,24 @@ El log contiene:
 [INFO] All coverage checks have been met.
 [INFO] BUILD SUCCESS
 También aparece You have 0 Checkstyle violations. y la ejecución de Dependency-Check 13.0.0. El log no publica el porcentaje de JaCoCo ni demuestra que se hayan corregido las diez CVE temporalmente aceptadas. OSS Index permaneció inactivo por ausencia de credenciales de Sonatype; se mantuvo la consulta a NVD.
-10.5 Nuevas pruebas y medición local de JaCoCo (10/11/2026)
+
+Ejecución posterior sobre el commit de las 18 pruebas. El workflow ci-miguel #42733267317 se ejecutó sobre el commit completo 62fbd69b3be2b1f03965f9620392e2f860acde4e de practica-2. El log del job verify terminó el 10/11/2026 a las 01:06:45 UTC, equivalente al 09/11/2026 a las 19:06:45 en Ciudad de México. El resultado global es success y contiene:
+[INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0
+[INFO] You have 0 Checkstyle violations.
+[INFO] No errors/warnings found
+[INFO] All coverage checks have been met.
+[INFO] BUILD SUCCESS
+El job ejecutó los quality gates configurados y el reporte de OWASP quedó sujeto a las supresiones documentadas en §6; esta aprobación no corrige las diez CVE de Spring. El log del CI no muestra un porcentaje exacto de JaCoCo.
+10.5 Nuevas pruebas y medición local de JaCoCo (09/11/2026)
 El instructor pidió incorporar una o dos pruebas para no quedar cerca del umbral mínimo de cobertura del 70 %. El desarrollador añadió dos casos unitarios a UsuarioServiceTest.java, sobre funcionalidades ya existentes y sin modificar código de producción:
 Prueba añadida	Comportamiento comprobado	Estado de evidencia
 listarUsuariosDevuelveRespuestasOrdenadasPorId	Comprueba que listar() solicita al repositorio resultados ordenados por id ascendente y transforma las entidades en DTOs UsuarioResponse. Se utiliza Mockito; no demuestra el orden físico de PostgreSQL.	Suite de servicio confirmada: 8 pruebas, 0 fallos y 0 errores; Surefire no desglosa métodos en el .txt mostrado [V]
 eliminarUsuarioExistenteLlamaDeleteById	Verifica que eliminar(id) llama a deleteById(id) cuando existsById(id) devuelve true.	Suite de servicio confirmada: 8 pruebas, 0 fallos y 0 errores; Surefire no desglosa métodos en el .txt mostrado [V]
 
 
-El conjunto actualizado quedó con 18 pruebas aprobadas: ocho de controlador, ocho de servicio, una de validación DTO y una de contexto. El desarrollador aportó la salida de findstr /S /C:"Tests run:" target\surefire-reports\*.txt con cuatro suites y un total de 18 ejecutadas, 0 fallos, 0 errores y 0 omitidas. Estos reportes confirman las suites, pero no prueban por sí solos el resultado global de Maven ni que un CI posterior haya pasado.
+El conjunto actualizado quedó con 18 pruebas aprobadas: ocho de controlador, ocho de servicio, una de validación DTO y una de contexto. La salida de findstr /S /C:"Tests run:" target\surefire-reports\*.txt confirma las cuatro suites y 18 casos sin fallos, errores ni omisiones. Además, el usuario compartió el cierre BUILD SUCCESS del clean verify local y el CI posterior #42733267317 también verificó esas 18 pruebas. [V]
 
-Evidencia de ejecución local de Surefire (10/11/2026) [V]:
+Evidencia de ejecución local de Surefire (09/11/2026) [V]:
 Clase de prueba	Ejecutadas	Fallos	Errores	Omitidas
 UsuarioControllerTest	8	0	0	0
 CrearUsuarioRequestTest	1	0	0	0
@@ -487,9 +496,9 @@ UsuarioServiceTest	8	0	0	0
 Total	18	0	0	0
 
 
-La evidencia se obtuvo de target/surefire-reports/*.txt mediante findstr. No se dispone del mensaje final de Maven en esa salida, por lo que no se atribuye un BUILD SUCCESS al ciclo completo de la ejecución.
+La ejecución de Surefire se comprobó con los cuatro archivos target/surefire-reports/*.txt. El BUILD SUCCESS local quedó confirmado mediante el log final de mvnw.cmd -B clean verify del 09/11/2026 a las 19:02:34 (UTC−06:00). El CI posterior también concluyó en BUILD SUCCESS con las 18 pruebas [V].
 
-Medición visual más reciente, proporcionada por el desarrollador el 10/11/2026 [V]:
+Medición visual más reciente, proporcionada por el desarrollador el 09/11/2026 [V]:
 Métrica	Contadores JaCoCo	Valor mostrado por JaCoCo	Interpretación
 Cobertura de líneas (gate ≥ 70 %)	28 no cubiertas de 126; 98 cubiertas	77.78 % (98/126)	Margen de +7.78 puntos porcentuales sobre el mínimo
 Cobertura de instrucciones	128 no cubiertas de 530; 402 cubiertas	75 %	Valor informativo; porcentaje tal como aparece en la interfaz
@@ -498,10 +507,11 @@ Cobertura de métodos	10 no cubiertos de 50; 40 cubiertos	40/50	Informativo
 Cobertura de clases	0 no cubiertas de 12	12/12	Informativo
 
 
+Nota de evidencia: la captura del resumen de JaCoCo se revisó durante el análisis, pero no se subió a docs/img/. Los contadores de la fila «Total» están transcritos en la tabla anterior. Para regenerar el informe local, ejecutar mvnw.cmd -B clean verify y abrir target/site/jacoco/index.html. No se crea un vínculo Markdown a una imagen inexistente.
 
-Comparación con la medición anterior: el 07/11 se informaron 94/134 líneas (70.15 %); el 10/11 la captura muestra 98/126 (77.78 %). La diferencia es +7.63 puntos porcentuales, pero el número total de líneas computadas también cambió (134 frente a 126). Por tanto, no puede afirmarse que la mejora se deba únicamente a las dos pruebas sin analizar el jacoco.csv, las clases instrumentadas y las posibles exclusiones en ambas ejecuciones.
+Comparación con la medición anterior: el 07/11 se informaron 94/134 líneas (70.15 %); el 09/11 la captura muestra 98/126 (77.78 %). La diferencia es +7.63 puntos porcentuales, pero el número total de líneas computadas también cambió (134 frente a 126). Por tanto, no puede afirmarse que la mejora se deba únicamente a las dos pruebas sin analizar el jacoco.csv, las clases instrumentadas y las posibles exclusiones en ambas ejecuciones.
 
-Pendiente para cierre: los cuatro reportes de Surefire ya verifican las 18 pruebas y cero incidencias. Queda por confirmar BUILD SUCCESS en la salida de mvnw.cmd -B clean verify y, después del push, comprobar el nuevo CI del PR #5. El umbral de JaCoCo no se modificó.
+Cierre de validación: las 18 pruebas pasaron en Surefire y en CI #42733267317; ambos builds finalizaron en BUILD SUCCESS. JaCoCo aprobó el mínimo del 70 % en ambos entornos y registró 77.78 % de líneas en el reporte local. La reevaluación de las diez CVE de Spring continúa pendiente de la decisión del instructor; el umbral de cobertura y failBuildOnCVSS=7 no se modificaron.
 11. Activación automática del Skill quality-gates-java
 Resultado: 2 de 2 activaciones automáticas demostradas. En dos conversaciones independientes, los prompts describían tareas de calidad sin mencionar el nombre ni la ruta del Skill. En ambas, Copilot seleccionó el Skill quality-gates-java mediante la herramienta Read skill quality-gates-java, sin que el prompt indicara explícitamente el Skill. Activación validada mediante captura de pantalla [V].
 #	Objetivo de la conversación	Activación automática observada	Herramienta	Evidencia	Revisión humana
