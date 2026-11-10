@@ -54,25 +54,21 @@ Crear una base de datos llamada:
 CREATE DATABASE ms_usuarios_db;
 ```
 
-La aplicación utiliza la siguiente conexión, definida en `src/main/resources/application.yaml`:
+La configuración de `src/main/resources/application.yaml` requiere tres variables de entorno para iniciar con PostgreSQL.
 
-```text
-jdbc:postgresql://localhost:5432/ms_usuarios_db
-```
-
-Las credenciales no están escritas directamente en el código. Se obtienen de dos variables de entorno:
-
-- `DB_USERNAME`
-- `DB_PASSWORD`
+- `DB_URL` contiene la URL JDBC de PostgreSQL.
+- `DB_USERNAME` contiene el usuario de PostgreSQL.
+- `DB_PASSWORD` contiene la contraseña.
 
 En una terminal CMD de Windows, configurarlas para la sesión actual:
 
 ```cmd
+set "DB_URL=jdbc:postgresql://localhost:5432/ms_usuarios_db"
 set "DB_USERNAME=usuario_postgres"
 set "DB_PASSWORD=contrasena_postgres"
 ```
 
-Sustituir los valores de ejemplo por las credenciales reales.
+Ajusta la URL y las credenciales a tu instancia de PostgreSQL.
 
 No subir contraseñas al repositorio.
 
@@ -141,16 +137,16 @@ Las operaciones fueron verificadas manualmente mediante Postman.
 
 ## Ejecutar las pruebas
 
-El proyecto incluye 13 pruebas automatizadas:
+El proyecto incluye 18 pruebas automatizadas:
 
 | Clase | Pruebas |
 |---|---|
-| `UsuarioServiceTest` | 3 |
+| `UsuarioServiceTest` | 8 |
 | `UsuarioControllerTest` | 8 |
 | `CrearUsuarioRequestTest` | 1 |
 | `MsUsuariosApplicationTests` | 1 |
 
-Para ejecutar únicamente las 12 pruebas de servicio, controlador y DTO, que no necesitan PostgreSQL:
+Para ejecutar únicamente las 17 pruebas de servicio, controlador y DTO, que no necesitan PostgreSQL:
 
 ```cmd
 .\mvnw.cmd -B -Dtest=UsuarioServiceTest,UsuarioControllerTest,CrearUsuarioRequestTest test
@@ -162,14 +158,14 @@ Para ejecutar la verificación completa:
 .\mvnw.cmd -B clean verify
 ```
 
-**Importante:** la prueba `MsUsuariosApplicationTests` utiliza `@SpringBootTest`, por lo que la verificación completa requiere PostgreSQL disponible y las variables `DB_USERNAME` y `DB_PASSWORD` configuradas en la terminal que ejecuta Maven.
+`MsUsuariosApplicationTests` activa el perfil `test` y usa H2 en memoria. La suite se ejecuta sin PostgreSQL y sin definir las variables de conexión. El perfil deshabilita Flyway y usa Hibernate para crear el esquema de prueba.
 
 ### Última verificación
 
-Fecha: 04/11/2026.
+El [CI de `663ad1c`](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42735717321) del 09/11/2026 registró el siguiente resultado.
 
 ```text
-Tests run: 13, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 18, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 

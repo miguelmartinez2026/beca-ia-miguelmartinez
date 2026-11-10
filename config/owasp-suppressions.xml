@@ -2,16 +2,15 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
 
     <!-- Asociación incorrecta por CPE: el CPE vmware:spring_framework no distingue módulos. -->
-    <!-- Lista cerrada de los 12 artefactos de Spring Framework 6.2.19 presentes en el proyecto. -->
+    <!-- La lista cerrada corresponde a los 12 artefactos 6.2.19 agrupados por OWASP. -->
     <suppress until="2027-02-06Z">
         <notes><![CDATA[
         CVE-2026-47888. Módulo realmente afectado: spring-messaging (RSocketMessageHandler).
         spring-messaging no está en el árbol de dependencias (confirmado con dependency:tree).
         OWASP asocia el CVE a otros módulos de Spring Framework porque el CPE vmware:spring_framework
         identifica el producto y la versión, no el módulo.
-        El patrón enumera exclusivamente los 12 artefactos instalados de la versión 6.2.19:
-        aop, aspects, beans, context, core, expression, jcl, jdbc, orm, tx, web y webmvc.
-        No incluye spring-messaging, spring-webflux ni spring-test, ni otras versiones.
+        El JSON de la revisión del 09/11 identifica los 12 artefactos del patrón como parte
+        de los grupos con esta asociación. Véase la sección 6.9.4 del informe.
         Aviso oficial: https://spring.io/security/cve-2026-47888
         Revisar al vencer la regla o si se agrega spring-messaging o RSocket.
         ]]></notes>
@@ -25,9 +24,8 @@
         spring-webflux no está en el árbol de dependencias (confirmado con dependency:tree).
         OWASP asocia el CVE a otros módulos de Spring Framework porque el CPE vmware:spring_framework
         identifica el producto y la versión, no el módulo.
-        El patrón enumera exclusivamente los 12 artefactos instalados de la versión 6.2.19:
-        aop, aspects, beans, context, core, expression, jcl, jdbc, orm, tx, web y webmvc.
-        No incluye spring-messaging, spring-webflux ni spring-test, ni otras versiones.
+        El JSON de la revisión del 09/11 identifica los 12 artefactos del patrón como parte
+        de los grupos con esta asociación. Véase la sección 6.9.4 del informe.
         Aviso oficial: https://spring.io/security/cve-2026-47893
         Revisar al vencer la regla o si se agrega spring-webflux.
         ]]></notes>
@@ -74,7 +72,7 @@
 
     <!-- P2-22: ACEPTACIÓN TEMPORAL DE RIESGO de 10 CVE de Spring Framework 6.2.19. NO son falsos positivos y NO están corregidos. -->
     <!-- Decisión del responsable del desarrollo; no hay aprobación de un tercero. Vencen el 2026-12-06. -->
-    <!-- El patrón enumera 12 artefactos y oculta cada CVE también en los módulos donde reside la clase vulnerable. -->
+    <!-- El JSON de la revisión del 09/11 identifica los 12 artefactos del patrón mediante relatedDependencies. -->
     <!-- Detalle por CVE en docs/QUALITY-REPORT.md, sección 6.8. -->
     <suppress until="2026-12-06Z">
         <notes><![CDATA[
@@ -192,9 +190,12 @@
         <notes><![CDATA[
         ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
         CVE-2026-59283 (NVD 9.1; aviso de Spring: MEDIUM). spring-expression 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
-        Condición: SimpleEvaluationContext con el compilador SpEL activo (spring.expression.compiler.mode en IMMEDIATE o MIXED).
+        Condición: evaluación de SpEL con SimpleEvaluationContext y compilación activa en modo
+        IMMEDIATE o MIXED, por propiedad o mediante SpelParserConfiguration.
         Evidencia local: sin SpEL en src; application.yaml no define spring.expression.compiler.mode; no existe spring.properties; el desarrollador no halló variables que activen el compilador.
-        Limitación: no se inspeccionaron opciones de JVM, variables de entorno ni el despliegue (el repositorio no contiene Dockerfile ni CI); no se analizó código de terceros.
+        Limitación: ci.yml verifica el proyecto en GitHub Actions. Queda pendiente inspeccionar
+        las opciones de JVM, el entorno y la configuración del despliegue productivo, así como
+        el uso de SimpleEvaluationContext en código de terceros.
         Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
         Aviso oficial: https://spring.io/security/cve-2026-59283
         Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-59283.
