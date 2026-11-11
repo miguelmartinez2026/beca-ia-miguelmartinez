@@ -4,238 +4,383 @@
 **Microservicio:** `ms-usuarios`  
 **Rama:** `practica-3`  
 **Fecha:** 10/11/2026  
-**Versión:** 0.1 — Plan técnico preliminar  
-**Estado:** Pendiente de revisión, corrección y aprobación
+**Versión:** 1.0 — Plan consolidado
+**Estado:** Arquitectura revisada y aceptada para continuar con la implementación. El contrato JWT compartido sigue pendiente de confirmación por los consumidores.
 
-## 1. Objetivo
+## 1. Objetivo y alcance
 
-Incorporar autenticación JWT, autorización por roles e integración segura entre microservicios, preservando el CRUD desarrollado en P1 y los controles de calidad incorporados durante P2.
+Incorporar autenticación JWT, autorización por roles e integración segura entre microservicios en `ms-usuarios`, preservando el CRUD de P1 y los controles de calidad de P2.
 
-`ms-usuarios` será responsable de autenticar credenciales, emitir JWT y proteger sus endpoints. Además, actuará como consumidor de `ms-catalogo`.
+`ms-usuarios` debe:
 
-## 2. Estado inicial
+1. Exponer `POST /api/auth/login`.
+2. Buscar al usuario por correo y verificar la contraseña con BCrypt.
+3. Emitir JWT firmados con HS256 (emisor exclusivo del contrato).
+4. Proteger el CRUD mediante Spring Security y aplicar autorización por roles.
+5. Validar tokens con verificación criptográfica real.
+6. Incorporar un cliente `RestClient` hacia `ms-catalogo` con propagación del Bearer token.
 
-El proyecto parte de:
+**Fuera de alcance:** cambios en los claims del contrato, endpoint de cambio de contraseña, revocación de tokens, bloqueo de cuentas, modificación de migraciones Flyway, actualización de Spring Boot y desactivación de controles de calidad.
 
-- Java 21 y Spring Boot 3.5.16.
-- CRUD REST de usuarios con cinco endpoints.
-- PostgreSQL, Spring Data JPA y Flyway.
-- Contraseñas almacenadas mediante BCrypt.
-- `PasswordEncoder` existente en `PasswordConfig`.
-- Pruebas automatizadas con JUnit 5, Mockito y MockMvc.
-- Perfil de pruebas H2.
-- 18 pruebas aprobadas en P2.
-- Cobertura local inicial de 77.78 % de líneas.
-- CI con controles Checkstyle, PMD, CPD, SpotBugs, OWASP Dependency-Check y JaCoCo.
+### Convención de etiquetas
 
-Actualmente el proyecto no dispone de autenticación JWT ni de una configuración completa de autorización por roles.
-
-## 3. Dependencias previstas
-
-| Dependencia | Finalidad |
+| Etiqueta | Significado |
 |---|---|
-| `spring-boot-starter-security` | Configuración de autenticación y autorización |
-| `spring-boot-starter-oauth2-resource-server` | Validación de tokens JWT Bearer |
-| `spring-boot-starter-actuator` | Endpoint de disponibilidad `health` |
-| `spring-security-test` | Pruebas MockMvc de autenticación y roles |
+| **[V]** | Hecho verificado en el repositorio |
+| **[C]** | Requisito del contrato JWT compartido (pendiente de confirmación) |
+| **[H]** | Decisión humana explícita |
+| **[P]** | Propuesta técnica sujeta a verificación durante la implementación |
 
-Se conservará Spring Boot 3.5.16. Antes de incorporar dependencias adicionales deberá revisarse su disponibilidad transitiva y su compatibilidad con el `pom.xml` existente.
+## 2. Diagnóstico inicial del proyecto [V]
 
-No se incorporarán bibliotecas JWT alternativas sin una necesidad técnica demostrada.
+- Java 21, Spring Boot 3.5.16, Maven Wrapper, PostgreSQL, Spring Data JPA, Flyway y Lombok.
+- Dependencias de seguridad actuales: solo `spring-security-crypto` (explícita). No hay Spring Security ni Actuator.
+- Cinco endpoints bajo `/api/usuarios` (`POST`, `GET` lista, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`) en `UsuarioController`.
+- `UsuarioService.crear` calcula el hash BCrypt y fija el rol `SOLICITANTE`; `PUT` solo modifica nombre y correo. No existe endpoint de cambio de rol ni de contraseña, ni administrador inicial.
+- `Usuario` guarda `passwordHash` pero no tiene `getPasswordHash()`. Las pruebas leen el campo con `ReflectionTestUtils`, por lo que el campo no debe renombrarse.
+- `Rol` es un enum con `SOLICITANTE`, `AGENTE` y `ADMIN`, coincidentes con los roles del contrato.
+- `UsuarioRepository` es un `JpaRepository` sin consultas propias. El correo se almacena normalizado (`strip().toLowerCase(Locale.ROOT)`), con `CHECK (email = lower(email))` e índice único funcional sobre `lower(email)`.
+- `PasswordConfig` expone un `BCryptPasswordEncoder`. `CrearUsuarioRequest` limita la contraseña a 72 bytes UTF-8 y oculta la contraseña en `toString`.
+- `ApiExceptionHandler` usa `ProblemDetail` e incluye un `@ExceptionHandler(Exception.class)` que responde 500. Por tanto, una `AccessDeniedException` lanzada dentro de un controlador (por ejemplo, con `@PreAuthorize`) se convertiría en 500; la autorización se resolverá en la cadena de filtros.
+- `application.yaml` no define `server.error.*` ni `management.*`. El perfil `test` usa H2 con `create-drop` y Flyway deshabilitado.
+- Pruebas: 18 aprobadas (8 de servicio, 8 de controlador con `@WebMvcTest`, 1 de DTO y 1 de contexto). Cobertura de líneas de referencia: 77.78 % (umbral JaCoCo: 70 %). El pom no define Failsafe, por lo que toda clase de prueba debe terminar en `*Test` (o `*Tests`, patrón existente) para ejecutarse con Surefire.
+- Controles de calidad de P2: Checkstyle, PMD, CPD, SpotBugs con FindSecBugs, OWASP Dependency-Check (falla con CVSS ≥ 7, con supresiones temporales documentadas) y JaCoCo. Comando de verificación: `.\mvnw.cmd -B verify`.
+- `docs/seguridad.md` no existe en este workspace; el contrato se tomó de la especificación recibida en la práctica (repositorio del Equipo 4, rama `docs/p3-seguridad-jwt`).
 
-## 4. Componentes propuestos
+## 3. Contrato JWT compartido [C]
 
-| Componente | Acción | Responsabilidad |
+El contrato fue propuesto en el repositorio del Equipo 4 y **no está confirmado por todos los consumidores**. `ms-usuarios` no propondrá cambios unilaterales en sus claims. Consumidores previstos: `ms-catalogo`, `ms-notificaciones` y `ms-tickets`.
+
+| Elemento | Valor |
+|---|---|
+| Emisor | Exclusivamente `ms-usuarios` |
+| Algoritmo | HS256 |
+| Secreto | Variable `JWT_SECRET`, Base64 estándar; mínimo 32 bytes tras decodificar |
+| `iss` | `ms-usuarios` |
+| `sub` | ID del usuario como String |
+| `roles` | Arreglo de String sin prefijo: `SOLICITANTE`, `AGENTE`, `ADMIN` |
+| `iat` | NumericDate |
+| `exp` | NumericDate; vigencia de 3600 s (`exp = iat + 3600`) |
+| Transporte | `Authorization: Bearer <token>` |
+| Autoridades Spring | Prefijo `ROLE_` aplicado al convertir `roles` |
+
+El token no incluirá claims adicionales (sin correo, nombre ni hash). El valor real de `JWT_SECRET` nunca se versiona ni aparece en respuestas, mensajes de error o registros.
+
+## 4. Decisiones vigentes
+
+| Id | Decisión | Origen |
 |---|---|---|
-| `UsuarioRepository` | Modificar | Incorporar una consulta de usuario por correo normalizado |
-| `PasswordConfig` | Reutilizar | Verificación BCrypt |
-| `AuthController` | Crear | Exponer `POST /api/auth/login` |
-| `AuthService` | Crear | Autenticar credenciales y coordinar emisión del JWT |
-| DTO de login | Crear | Recibir correo y contraseña |
-| DTO de respuesta | Crear | Entregar token, tipo y vigencia |
-| `SecurityConfig` | Crear | Configurar filtros, sesiones, CSRF y autorizaciones |
-| Configuración JWT | Crear | Encoder, decoder, secreto y validadores |
-| Conversor de roles | Configurar | Transformar `roles` en autoridades `ROLE_` |
-| Cliente de catálogo | Crear | Consumir un endpoint externo con `RestClient` |
-| Pruebas de seguridad | Crear/modificar | Validar autenticación, permisos y token |
-| Configuración YAML | Modificar | Incorporar variables de entorno y Actuator |
+| D-01 | **Registro público provisional:** `POST /api/usuarios` es público y el rol queda fijado en `SOLICITANTE`. La política definitiva queda pendiente de validación de negocio. | [H] |
+| D-02 | **CRUD administrativo:** `GET` lista, `GET /{id}`, `PUT /{id}` y `DELETE /{id}` solo para `ADMIN`. No hay acceso a recursos propios en P3. | [H] |
+| D-03 | **Primer ADMIN (opción B2):** aprovisionamiento manual, sin `ApplicationRunner` ni semilla en migraciones. La contraseña administrativa nunca se incorpora a SQL versionado ni a documentación. | [H] |
+| D-04 | **Validación estricta del claim `roles`:** obligatorio, arreglo no vacío de String con valores en {`SOLICITANTE`, `AGENTE`, `ADMIN`}. Ausente, nulo, vacío, de tipo incorrecto o con valores desconocidos → 401. Roles válidos pero insuficientes → 403. | [H] |
+| D-05 | **Tolerancia de reloj de cero segundos**, configurada explícitamente. El token deja de aceptarse al alcanzar `exp`. Se prueba el comportamiento en el límite. | [H] |
+| D-06 | **Catálogo independiente de la autenticación**, pero entregable obligatorio de P3: `RestClient`, propagación del Bearer y pruebas con servidor simulado antes de cerrar la práctica. La operación concreta espera el contrato de Gerardo. | [H] |
+| D-07 | `getPasswordHash()` se acepta exclusivamente para uso interno de `AuthService`; nunca se expone en un DTO. | [H] |
+| D-08 | No se implementa hash señuelo. El riesgo residual de enumeración por tiempo de respuesta se documenta. | [H] |
+| D-09 | Se mantienen las cuatro dependencias aprobadas y se conserva `spring-security-crypto` explícita. | [H] |
+| D-10 | Respuesta de login: `accessToken`, `tokenType: "Bearer"` y `expiresIn: 3600`. | [H][C] |
+| D-11 | Los errores 401 y 403 usan respuestas genéricas compatibles con `ProblemDetail`. | [H] |
+| D-12 | Se conservan las pruebas existentes y los controles de calidad de P2 (sin desactivar reglas ni bajar el umbral JaCoCo). | [H] |
+| D-13 | Clave Base64 estándar únicamente; la clave decodificada debe tener al menos 32 bytes y la aplicación falla al arrancar si no se cumple. | [H][C] |
+| D-14 | Los secretos de prueba se generan en memoria (ver sección 11.1). | [H] |
+| D-15 | Un solo documento de plan vigente. Las diferencias entre las propuestas de Copilot y las correcciones humanas se registran únicamente en `BITACORA-IA.md`. | [H] |
 
-Las clases definitivas se determinarán durante la revisión del plan para evitar duplicación de responsabilidades.
+## 5. Dependencias
 
-## 5. Contrato JWT
+| Dependencia | Estado | Alcance | Finalidad |
+|---|---|---|---|
+| `spring-boot-starter-security` | Nueva | compile | Filtros, `SecurityFilterChain`, autorización |
+| `spring-boot-starter-oauth2-resource-server` | Nueva | compile | Validación de JWT Bearer (`JwtDecoder`, Nimbus) y emisión con `JwtEncoder` |
+| `spring-boot-starter-actuator` | Nueva | compile | Endpoint `health` |
+| `spring-security-test` | Nueva | test | `jwt()` y utilidades de MockMvc |
+| `spring-security-crypto` | Existente | compile | `BCryptPasswordEncoder` (se conserva explícita) |
+| `spring-boot-starter-web`, `-data-jpa`, `-validation`, `flyway-*`, `postgresql`, `lombok`, `spring-boot-starter-test`, `h2` | Existentes | — | Sin cambios |
 
-Se seguirá `docs/seguridad.md` como referencia compartida.
+- Se conserva Spring Boot 3.5.16; no se propone actualización.
+- No se añaden bibliotecas JWT alternativas ni dependencias de pruebas HTTP adicionales: `MockRestServiceServer` ya forma parte de `spring-boot-starter-test`/Spring Test.
+- Al incorporar las dependencias se revisarán `dependency:tree` y el resultado de OWASP Dependency-Check. Cualquier alerta nueva o cambio en las supresiones se documentará y se someterá a revisión antes de modificar su configuración.
 
-- Algoritmo: HS256.
-- Secreto: variable `JWT_SECRET` codificada en Base64.
-- Clave: mínimo 32 bytes después de decodificar.
-- Emisor (`iss`): `ms-usuarios`.
-- Sujeto (`sub`): identificador del usuario como String.
-- Roles (`roles`): arreglo de cadenas sin prefijo.
-- Emisión (`iat`): fecha de emisión.
-- Expiración (`exp`): 60 minutos.
-- Autorización HTTP: `Authorization: Bearer <token>`.
+## 6. Arquitectura y componentes
 
-Se validará criptográficamente la firma, la expiración y el emisor.
+Se mantiene la arquitectura `controller → service → repository`; la lógica de negocio permanece en servicios. DTOs como `record` con Jakarta Validation; inyección por constructor; ninguna entidad JPA se expone en la API.
 
-El valor real del secreto no se incluirá en el repositorio.
+### 6.1 Archivos a crear
 
-## 6. Matriz preliminar de autorización
+| Clase o archivo | Responsabilidad | Dependencias | Justificación |
+|---|---|---|---|
+| `config/JwtProperties` | Propiedades `seguridad.jwt.secret` (`${JWT_SECRET}`, sin valor por defecto), `issuer` (`ms-usuarios`) y `expiracion-segundos` (3600). Valida Base64 y ≥ 32 bytes sin imprimir el valor. | Spring Boot | Configuración externa, sin valores en código |
+| `config/JwtConfig` | `SecretKeySpec` HmacSHA256, `JwtEncoder` (Nimbus con `ImmutableSecret`), `JwtDecoder` (`NimbusJwtDecoder` fijado a HS256) y validadores de emisor, expiración y claims obligatorios. | `JwtProperties` | Un único punto para firmar y validar con la misma clave |
+| `config/SecurityConfig` | `SecurityFilterChain` stateless, CSRF deshabilitado, reglas por URL con `anyRequest().denyAll()`, `oauth2ResourceServer(jwt)`, `JwtAuthenticationConverter` (`roles` → `ROLE_*`). No depende de `JwtProperties`, para poder importarlo en `@WebMvcTest` con un `JwtDecoder` simulado. | `JwtDecoder`, manejador de errores | Autorización centralizada sin `@PreAuthorize` |
+| `config/ManejadorErroresSeguridad` | `AuthenticationEntryPoint` y `AccessDeniedHandler` que producen 401/403 genéricos con `ProblemDetail`. | Jackson | Evitar los mensajes por defecto de Spring |
+| `controller/AuthController` | `POST /api/auth/login` con `@Valid`. | `AuthService` | Capa web delgada |
+| `service/AuthService` | Normaliza el correo, busca el usuario, verifica BCrypt y delega la emisión. Único consumidor de `getPasswordHash()`. | `UsuarioRepository`, `PasswordEncoder`, `TokenService` | Lógica de autenticación en la capa de servicio |
+| `service/TokenService` | Emite el JWT con los claims `iss`, `sub`, `roles`, `iat`, `exp` y ningún otro. | `JwtEncoder`, `JwtProperties` | Aísla la emisión y facilita su prueba |
+| `dto/LoginRequest` (record) | Correo y contraseña con `@NotBlank`/`@Size`, misma normalización de correo que `CrearUsuarioRequest` y `toString` sin contraseña. | Jakarta Validation | Contrato de entrada coherente |
+| `dto/LoginResponse` (record) | `accessToken`, `tokenType` (`"Bearer"`) y `expiresIn` (3600). | — | Contrato de salida (D-10) |
+| `exception/CredencialesInvalidasException` | Señala credenciales inválidas (mismo mensaje para usuario inexistente y contraseña incorrecta). | — | Respuesta 401 uniforme |
 
-La siguiente matriz representa una política inicial restrictiva para la implementación de seguridad. Requiere validación frente a las reglas de negocio.
+### 6.2 Archivos a crear en la fase de catálogo
 
-| Endpoint | Público | SOLICITANTE | AGENTE | ADMIN |
+| Clase | Responsabilidad |
+|---|---|
+| `config/CatalogoProperties` | Lee `SERVICIOS_CATALOGO_URL` y tiempos de espera; opcional. |
+| `config/CatalogoClientConfig` | Construye el `RestClient` solo si la URL está configurada. |
+| `client/CatalogoClient` | Infraestructura HTTP: URL base, propagación del Bearer y traducción de errores (404, 5xx, servicio no disponible). **No define rutas ni DTOs de catálogo** hasta que Gerardo confirme el contrato. |
+| Excepciones de cliente | Recurso inexistente y servicio no disponible, con mapeo a `ProblemDetail` genérico. |
+
+Los nombres exactos del paquete y de las excepciones de esta fase se confirmarán al implementarla. Antes de implementarla se definirá qué componente de `ms-usuarios` consume el cliente, para evitar código sin uso.
+
+### 6.3 Archivos a modificar
+
+| Archivo | Cambio |
+|---|---|
+| `pom.xml` | Añadir las cuatro dependencias; conservar `spring-security-crypto`. |
+| `src/main/resources/application.yaml` | `seguridad.jwt.*`; `management.endpoints.web.exposure.include: health` con detalles ocultos; `server.error.include-message`, `include-stacktrace` y `include-binding-errors` en `never`. |
+| `domain/Usuario` | Añadir `getPasswordHash()` (uso interno, sin exposición en DTO). No renombrar el campo. |
+| `repository/UsuarioRepository` | Consulta parametrizada `@Query("select u from Usuario u where lower(u.email) = :email")`. Compatible con el índice `uq_usuarios_email_lower`; evita `IgnoreCase` derivado, que generaría `upper(...)`. |
+| `exception/ApiExceptionHandler` | Manejador de `CredencialesInvalidasException` → 401 genérico. |
+| `dto/CrearUsuarioRequest` o `RestriccionesUsuario` (ya existente) | Constante compartida del límite de 72 bytes, sin cambio de comportamiento. |
+| `UsuarioControllerTest` (8 pruebas) y `MsUsuariosApplicationTests` | Adaptación a la seguridad (importar `SecurityConfig`, `JwtDecoder` simulado, `jwt()`, clave de pruebas) conservando las aserciones. |
+| `README.md` | `JWT_SECRET`, autenticación, procedimiento B2 sin credenciales y cifra de pruebas actualizada (fase de documentación). |
+
+### 6.4 Sin cambios
+
+`PasswordConfig`, `Rol`, `UsuarioController`, `UsuarioService`, los DTOs de usuario (salvo la constante compartida indicada en 6.3), migraciones Flyway y `application-test.yaml`.
+
+## 7. Flujo de autenticación
+
+1. El cliente envía `POST /api/auth/login` con `email` y `password` (los mismos nombres de campo que `CrearUsuarioRequest` [V]).
+2. `@Valid` rechaza campos vacíos y contraseñas de más de 72 bytes UTF-8 con 400.
+3. `AuthService` normaliza el correo (`strip().toLowerCase(Locale.ROOT)`) y consulta `lower(email) = :email` mediante consulta parametrizada.
+4. Si el usuario no existe o `PasswordEncoder.matches` falla, se lanza `CredencialesInvalidasException` → 401 con el mismo cuerpo en ambos casos.
+5. Si coincide, `TokenService` emite el JWT: `iss=ms-usuarios`, `sub=String.valueOf(id)`, `roles=[rol.name()]`, `iat=ahora`, `exp=iat+3600`.
+6. Se responde 200 con `{ accessToken, tokenType: "Bearer", expiresIn: 3600 }`.
+7. El hash solo se lee dentro de `AuthService`; ni la respuesta, ni los registros, ni los mensajes de error lo contienen. No se registran contraseñas ni tokens.
+
+Riesgo residual aceptado (D-08): el tiempo de respuesta puede diferir entre usuario inexistente y contraseña incorrecta.
+
+## 8. Matriz de autorización aprobada
+
+| Endpoint | Anónimo | SOLICITANTE | AGENTE | ADMIN |
 |---|---|---|---|---|
-| `POST /api/auth/login` | Sí | Sí | Sí | Sí |
-| `POST /api/usuarios` | No | No | No | Sí |
-| `GET /api/usuarios` | No | No | No | Sí |
-| `GET /api/usuarios/{id}` | No | No | No | Sí |
-| `PUT /api/usuarios/{id}` | No | No | No | Sí |
-| `DELETE /api/usuarios/{id}` | No | No | No | Sí |
-| `GET /actuator/health` | Sí | Sí | Sí | Sí |
+| `POST /api/auth/login` | 200 / 400 / 401 | igual | igual | igual |
+| `POST /api/usuarios` | 201 | 201 | 201 | 201 |
+| `GET /api/usuarios` | 401 | 403 | 403 | 200 |
+| `GET /api/usuarios/{id}` | 401 | 403 | 403 | 200 (o 404 si no existe) |
+| `PUT /api/usuarios/{id}` | 401 | 403 | 403 | 200 (o 404 si no existe) |
+| `DELETE /api/usuarios/{id}` | 401 | 403 | 403 | 204 (o 404 si no existe) |
+| `GET /actuator/health` | 200 sin detalle | 200 | 200 | 200 |
+| Cualquier otra ruta o método | 401 | 403 | 403 | 403 (`denyAll`) |
 
-Para P3 se propone una política administrativa inicial sobre el CRUD completo, evitando exponer información de terceros sin una regla de propiedad de recursos confirmada.
+Los códigos de la matriz son los de la autorización; los errores de validación (400), de unicidad (409) y de recurso inexistente (404) son respuestas de negocio de la operación ya autorizada.
 
-Quedan pendientes la política de registro público, la consulta del perfil propio y la creación inicial de un administrador.
+### 8.1 Autorización frente a recursos inexistentes
 
-## 7. Configuración de seguridad
+La decisión de autorización se toma en la cadena de filtros, antes de llegar al controlador y sin consultar la base de datos. Por tanto:
 
-Se implementará:
+- **401** significa "no autenticado": token ausente o inválido. **403** significa "autenticado con roles válidos pero insuficientes". **404** significa "recurso inexistente", y solo se observa si el solicitante ya está autorizado (por ejemplo, `ADMIN` consultando un ID inexistente).
+- Un usuario no `ADMIN` recibe 403 sobre `/api/usuarios/{id}` tanto si el ID existe como si no. Así no puede deducir qué identificadores existen.
+- Una ruta no declarada o un método no declarado no revela si existe: el anónimo recibe 401 y el autenticado 403 (`denyAll`). No se responde 404 ni 405 para rutas no autorizadas.
+- Las respuestas 401/403 no incluyen la ruta solicitada (`instance`), el motivo del rechazo ni detalles del token. La cabecera `WWW-Authenticate` será `Bearer` sin `error_description` ni la causa de la invalidez. **[P]** Se verificará que el despacho interno a `/error` no genere respuestas distintas a las descritas.
+- Se mantiene el 404 de `UsuarioNoEncontradoException` existente para `ADMIN`. Antes de la implementación se comprobará cómo responde hoy una ruta inexistente a través de `ApiExceptionHandler` (cuya regla `Exception.class` responde 500) para no introducir regresiones.
 
-- `SecurityFilterChain` con autenticación por JWT.
-- Sesiones HTTP `STATELESS`.
-- CSRF deshabilitado para la API exclusivamente Bearer.
-- `JwtDecoder` HS256 con secreto externo.
-- Validación de expiración y emisor.
-- Conversión explícita de roles al prefijo `ROLE_`.
-- Denegación por defecto de operaciones no autorizadas.
-- Actuator con exposición exclusiva de `health`.
-- `include-message: never`.
-- `include-stacktrace: never`.
+## 9. Validación JWT y manejo de errores
 
-## 8. Plan de pruebas
+### 9.1 Validación del token (`JwtDecoder` real)
 
-### Autenticación
+| Verificación | Resultado si falla |
+|---|---|
+| Firma HS256 válida y algoritmo exactamente HS256 (rechazo de `none`, HS384/HS512 y otros) | 401 |
+| `iss` igual a `ms-usuarios` | 401 |
+| `exp` presente y token no expirado, **tolerancia de reloj 0 s** (D-05) | 401 |
+| `iat` presente | 401 |
+| `sub` presente y no vacío | 401 |
+| `roles` presente, no nulo, arreglo no vacío de String, con valores en {`SOLICITANTE`, `AGENTE`, `ADMIN`} (D-04) | 401 |
+
+- **Expiración:** `JwtTimestampValidator` usa por defecto 60 s de tolerancia, por lo que se configurará explícitamente con `Duration.ZERO`. **[P]** El validador estándar rechaza solo si el instante actual es posterior a `exp`; se añadirá una prueba de límite con reloj fijo (la fábrica del decoder recibirá un `Clock`, sin bean global) y, si el instante exacto `exp` se aceptara, se complementará con un validador propio que rechace cuando `ahora ≥ exp`.
+- Un valor como `ROLE_ADMIN` en `roles` se considera valor desconocido → 401.
+- La validación de `roles` se ejecuta en el decoder (autenticación fallida → 401) y no en la autorización; así 403 queda reservado para roles válidos insuficientes.
+- Un token inválido o expirado devuelve 401 incluso en rutas públicas como `POST /api/usuarios` (comportamiento por defecto del filtro Bearer, aceptado y documentado).
+
+### 9.2 Conversión de roles
+
+`JwtAuthenticationConverter` lee el claim `roles` y asigna autoridades con prefijo `ROLE_` (`ROLE_ADMIN`, etc.). No se utilizan los scopes por defecto.
+
+### 9.3 Errores 401 y 403
+
+- `AuthenticationEntryPoint` y `AccessDeniedHandler` devuelven `ProblemDetail` genérico, sin `error_description`, sin mensajes de excepción y sin información de la ruta.
+- El cuerpo es idéntico para token ausente, mal formado, expirado o alterado.
+- `server.error.include-message`, `include-stacktrace` y `include-binding-errors` en `never`.
+- No se exponen contraseñas, hashes, tokens ni secretos en respuestas ni registros.
+
+## 10. Configuración de seguridad
+
+- `SecurityFilterChain` con sesiones `STATELESS` y CSRF deshabilitado, por tratarse de una API exclusivamente Bearer sin cookies de sesión. **[P]** Si SpotBugs/FindSecBugs reporta este punto como falso positivo, se documentará y se solicitará revisión antes de modificar su configuración.
+- Reglas por URL según la sección 8, terminadas en `anyRequest().denyAll()`.
+- `JwtEncoder` y `JwtDecoder` compatibles con HS256, con el mismo secreto.
+- Actuator: solo `health` expuesto, sin detalles (`show-details: never`). Cualquier otro endpoint de Actuator queda bajo `denyAll`.
+- `JWT_SECRET` y `SERVICIOS_CATALOGO_URL` provienen de variables de entorno. La aplicación falla al arrancar si `JWT_SECRET` falta, no es Base64 o decodifica a menos de 32 bytes, sin imprimir el valor.
+- `SERVICIOS_CATALOGO_URL` es opcional para el arranque y el login (D-06).
+- **[P]** Se verificará que no aparezca la contraseña generada por defecto de Spring Boot en los registros (el bean `JwtDecoder` debería evitar la configuración de usuario por defecto).
+
+## 11. Estrategia de pruebas
+
+Las pruebas deben terminar en `Test`/`Tests` (el pom no define Failsafe) y conservar las 18 pruebas existentes. Se distinguen dos familias:
+
+- **Pruebas de rutas con `jwt()`** (`@WebMvcTest` + `@Import(SecurityConfig)` + `@MockitoBean JwtDecoder`): verifican la matriz de autorización. `jwt()` **no** verifica firma ni expiración, y solo aplica el conversor de la aplicación si se declara `authorities` explícitas.
+- **Pruebas criptográficas reales** (`@SpringBootTest` con perfil `test`, H2 y el `JwtDecoder` real): verifican firma, claims y expiración.
+
+### 11.1 Clave JWT de pruebas generada en memoria
+
+- La clave se genera al iniciar la JVM de pruebas con `SecureRandom` (32 bytes) y se codifica en Base64 estándar.
+- Un componente de soporte en `src/test` genera la clave una sola vez por JVM, la registra como propiedad (`seguridad.jwt.secret`) mediante un mecanismo compartido y la expone a las pruebas que necesiten firmar tokens propios (por ejemplo, tokens alterados, expirados o con claims incorrectos).
+- El mecanismo registra la propiedad en todo test que cargue el contexto Spring completo (incluida `MsUsuariosApplicationTests`). **[P]** Puede ser un `ApplicationContextInitializer` compartido o `@DynamicPropertySource` en una clase base; se decidirá en la fase 1. Debe usar una clave única por JVM para no multiplicar contextos en caché.
+- No se versiona ningún secreto real ni fijo: ni en `application.yaml`, ni en `application-test.yaml`, ni en el código de pruebas, ni en el CI. La clave nunca se imprime.
+- Un test del propio mecanismo comprobará que la clave decodificada tiene al menos 32 bytes.
+
+### 11.2 Autenticación y emisión
 
 | Caso | Resultado esperado |
 |---|---|
-| Login con credenciales correctas | 200 y JWT válido |
-| Contraseña incorrecta | 401 |
-| Usuario inexistente | 401, sin revelar existencia de la cuenta |
-| Token alterado | 401 |
-| Token expirado | 401 |
-| Token firmado con clave incorrecta | 401 |
-| Algoritmo no permitido | 401 |
-| Token válido con claims requeridos | Autenticación correcta |
+| Login correcto | 200, `accessToken`, `tokenType: "Bearer"`, `expiresIn: 3600` |
+| Contraseña incorrecta | 401 genérico |
+| Usuario inexistente | 401 con cuerpo idéntico al anterior |
+| Cuerpo inválido (vacío, `email` o `password` en blanco) | 400 |
+| Contraseña > 72 bytes UTF-8 | 400 |
+| Correo con mayúsculas o espacios | Coincide con el usuario normalizado |
+| Respuesta de login | Sin contraseña ni hash |
+| Claims del token emitido | Exactamente `iss`, `sub` (String), `roles` (arreglo de String), `iat`, `exp`; `exp − iat = 3600` |
+| Compatibilidad | Un verificador HS256 independiente basado en la clave Base64 valida el token (simula el rol de un consumidor) |
+| Flujo de extremo a extremo | Login de `ADMIN` seguido de `GET /api/usuarios` con el token → 200 |
 
-### Autorización
+### 11.3 Validación criptográfica con `JwtDecoder` real
 
-Para cada endpoint protegido:
+| Caso | Resultado esperado |
+|---|---|
+| Token alterado (payload o firma) | 401 |
+| Firma con clave distinta | 401 |
+| `alg: none`, HS384 o HS512 | 401 |
+| Emisor distinto | 401 |
+| Token con `exp` anterior al instante actual | 401 |
+| **Reloj fijo, `now = exp − 1 s`** | Aceptado |
+| **Reloj fijo, `now = exp`** | Rechazado |
+| **Reloj fijo, `now = exp + 1 s`** | Rechazado |
+| Sin `exp`, sin `iat` o sin `sub` (o `sub` en blanco) | 401 |
+| `roles` ausente, nulo, vacío, de tipo incorrecto (string, número, objeto, arreglo con elementos no String) o con valor desconocido (incluido `ROLE_ADMIN`) | 401 |
+| `roles` válido pero insuficiente para la ruta | 403 |
+| Token válido con rol permitido | Operación exitosa |
 
-- Sin token: 401.
-- Token válido con rol insuficiente: 403.
-- Token válido con rol permitido: respuesta exitosa de la operación.
+### 11.4 Autorización
 
-`login` y `health` son excepciones públicas y no requieren casos artificiales de 401/403.
+- Para cada endpoint protegido de la matriz: sin token → 401; rol insuficiente → 403; rol permitido → éxito.
+- `login`, el registro público y `health` son públicos y no requieren casos artificiales de 401/403; se comprueba que cualquier rol obtiene la respuesta pública.
+- 404 de recurso frente a 403: `ADMIN` con ID inexistente → 404; `SOLICITANTE`/`AGENTE` con el mismo ID → 403; anónimo → 401.
+- Ruta y método no declarados: anónimo → 401; autenticado (incluido `ADMIN`) → 403.
+- Las respuestas 401/403 no contienen la ruta solicitada ni detalles del token; `WWW-Authenticate` es `Bearer` sin descripción.
+- Actuator: `/actuator/health` → 200 sin detalles; otro endpoint de Actuator → 401/403 según la matriz.
+- Prueba unitaria del `JwtAuthenticationConverter` (`roles` → `ROLE_*`).
 
-Las pruebas existentes del CRUD serán adaptadas para incorporar autenticación simulada mediante `jwt()` sin desactivar los filtros de seguridad.
+### 11.5 Regresión
 
-Las pruebas de firmas y expiración utilizarán el decoder real, dado que `jwt()` no verifica la firma criptográfica.
+- Las 18 pruebas existentes se conservan; solo se adapta la configuración de seguridad de las pruebas de controlador y de contexto, sin cambiar sus aserciones.
+- `.\mvnw.cmd -B verify` debe finalizar correctamente, con Checkstyle, PMD, CPD, SpotBugs, OWASP Dependency-Check y JaCoCo activos y el umbral de 70 % intacto.
 
-### Integración
+## 12. Integración con `ms-catalogo`
 
-Se comprobará:
+- La autenticación no depende de catálogo (D-06): el arranque y el login funcionan sin `SERVICIOS_CATALOGO_URL`.
+- Se implementará con `RestClient`; la URL base proviene de `SERVICIOS_CATALOGO_URL`, definida solo mediante configuración externa.
+- Propagación: cuando `ms-usuarios` actúa en representación de un usuario, reenvía su Bearer token. El token solo se envía al host configurado y nunca se registra.
+- El endpoint de consulta de categorías y el contrato JSON están **pendientes de confirmación por Gerardo**. No se inventan rutas ni DTOs; la fase 4 implementa y prueba solo la infraestructura (cliente, propagación, traducción de errores).
+- Pruebas con servidor HTTP simulado (`MockRestServiceServer` o equivalente sin dependencias nuevas):
 
-- Propagación del Bearer token al servicio de catálogo.
-- Respuesta exitosa 200.
-- Respuesta externa 404.
-- Servicio externo no disponible.
+| Caso | Resultado esperado |
+|---|---|
+| Respuesta 200 | El cliente devuelve el resultado |
+| Respuesta 404 | Excepción de recurso inexistente controlada |
+| Respuesta 5xx | Error controlado |
+| Servicio no disponible (puerto cerrado o fallo de conexión) | Error controlado, sin interrumpir el servicio |
+| `Authorization: Bearer <token>` | Presente cuando se propaga; ausente cuando no hay token |
+| Arranque y login sin `SERVICIOS_CATALOGO_URL` | Funcionan |
 
-Se empleará `MockRestServiceServer` o una herramienta equivalente.
+- La operación concreta de catálogo se completará cuando Gerardo confirme el contrato; mientras tanto, la integración se considera entregada en su infraestructura y pendiente en su contrato.
 
-## 9. Integración entre microservicios
+## 13. Agente revisor de seguridad
 
-`ms-usuarios` emitirá JWT compatibles con:
-
-- `ms-catalogo`.
-- `ms-notificaciones`.
-
-Como consumidor, implementará una consulta de categorías mediante `RestClient`.
-
-La URL base se obtendrá de `SERVICIOS_CATALOGO_URL`.
-
-El endpoint específico y el contrato JSON de catálogo están pendientes de confirmación por parte de Gerardo.
-
-## 10. Agente revisor de seguridad
-
-Se preparará:
+Entregable obligatorio, a preparar durante la implementación (fase 6):
 
 `.github/agents/revisor-seguridad.agent.md`
 
 Condiciones:
 
-- Herramientas exclusivamente de lectura y búsqueda.
-- Sin edición automática.
-- Revisión orientada a OWASP Top 10.
-- Informe con ID, severidad, categoría OWASP, archivo, línea, hallazgo y corrección propuesta.
-- Revisión humana de todos los hallazgos críticos y altos.
-- Registro de correcciones aplicadas y riesgos justificados.
+- Herramientas exclusivamente de **lectura y búsqueda**: sin edición, sin ejecución de comandos y sin escritura de archivos. Los nombres exactos de las herramientas se verificarán al crear el archivo.
+- Revisión orientada a **OWASP Top 10** (control de acceso, fallas criptográficas, inyección, configuración insegura, componentes vulnerables, fallas de autenticación, registro y monitoreo, SSRF, entre otros).
+- **Informe de hallazgos** con ID, severidad, categoría OWASP, archivo, línea, descripción del hallazgo, evidencia y corrección propuesta. No corrige el código por sí mismo.
+- Alcance doble: la rama `practica-3` de este proyecto y **un Pull Request de otro integrante del equipo**, conforme a la guía de la práctica. El PR a revisar lo indicará el responsable; el agente solo lo lee y no lo modifica.
+- Revisión humana de todos los hallazgos críticos y altos, y registro de las correcciones aplicadas y de los riesgos justificados.
+- Los resultados alimentarán `docs/SECURITY-REPORT.md` y la bitácora.
 
-El agente deberá revisar también un PR de otro integrante del equipo, conforme a la guía.
+## 14. Riesgos y decisiones pendientes
 
-## 11. Riesgos
+### 14.1 Riesgos
 
-| Riesgo | Tratamiento previsto |
+| Riesgo | Tratamiento |
 |---|---|
-| Incompatibilidad de claims entre servicios | Contrato JWT compartido y prueba de integración |
-| Exposición del secreto HS256 | Variables de entorno y distribución privada |
-| Token aceptado sin validar firma | Pruebas criptográficas con decoder real |
-| Roles sin prefijo correcto | Conversor explícito y pruebas 403/200 |
-| Pérdida de acceso al CRUD | Adaptación de pruebas y matriz de permisos |
-| Ausencia de administrador inicial | Definir aprovisionamiento seguro antes de operar |
-| Caída de catálogo | Manejo controlado de errores |
-| Regresiones en P2 | Ejecutar Maven verify y comprobar CI |
-| Cobertura insuficiente | Añadir pruebas significativas sin reducir el umbral |
-| Vulnerabilidades conocidas de Spring | Mantener trazabilidad de los riesgos documentados en P2 |
+| Secreto HS256 compartido entre emisor y tres consumidores: cualquiera de ellos podría emitir tokens válidos | Distribución privada por variable de entorno; rotación y distribución acordadas fuera del repositorio; riesgo inherente al contrato |
+| Contrato JWT no confirmado por los consumidores | Prueba de compatibilidad independiente; sin cambios unilaterales; confirmación pendiente |
+| Registro público: enumeración por 409, spam, sin verificación de correo ni límite de intentos | Política provisional (D-01); validación de negocio pendiente |
+| Login sin limitación de intentos ni bloqueo (no hay campo de estado y las migraciones no se modifican) | Riesgo documentado |
+| Diferencia de tiempo entre usuario inexistente y contraseña incorrecta | Riesgo residual aceptado (D-08) |
+| Sin revocación: un token es válido hasta 1 h tras eliminar o degradar al usuario | Vigencia corta; riesgo documentado |
+| Un `ADMIN` puede eliminarse o eliminar al último `ADMIN` | Decisión de negocio pendiente |
+| B2 manual: sin auditoría automática y sin endpoint de cambio de contraseña | Procedimiento documentado sin credenciales; riesgo documentado |
+| Token inválido en rutas públicas → 401 | Comportamiento aceptado y documentado |
+| Despacho `/error` y rutas inexistentes frente a `ApiExceptionHandler` (`Exception.class` → 500) | Verificación previa y pruebas (sección 8.1) |
+| `@PreAuthorize` futuro chocaría con `Exception.class` → 500 | No se usa seguridad por método en P3 |
+| OWASP Dependency-Check con dependencias nuevas; supresiones temporales con vencimiento el 06/12/2026 | Revisar el reporte tras cambiar el pom; no desactivar el análisis |
+| FindSecBugs (por ejemplo, CSRF deshabilitado) | Documentar posible falso positivo y solicitar revisión; no modificar reglas |
+| Márgenes de JaCoCo, CPD y Checkstyle con código nuevo | Pruebas significativas; sin reducir el umbral |
+| Transporte entre servicios sin HTTPS | Pendiente de acordar con el equipo |
 
-## 12. Plan de trabajo
+### 14.2 Decisiones pendientes de aprobación humana
 
-| Fase | Entregable |
-|---|---|
-| 1. Contrato | `docs/seguridad.md` |
-| 2. Planificación | Plan elaborado y corregido en modo Planning |
-| 3. Autenticación | Endpoint login y emisión JWT |
-| 4. Autorización | Matriz aplicada a los endpoints |
-| 5. Pruebas | Casos 401, 403, éxito y validaciones criptográficas |
-| 6. Integración | Cliente `RestClient` y pruebas simuladas |
-| 7. Revisión | Agente de seguridad y hallazgos |
-| 8. Evidencias | `docs/SECURITY-REPORT.md` y bitácora |
-| 9. Entrega | Maven verify, CI, PR y tag |
+1. Política definitiva de registro público.
+2. Consulta del perfil propio y acceso a recursos propios (fuera de P3).
+3. Protección del último `ADMIN` y autoeliminación.
+4. Confirmación del contrato JWT por `ms-catalogo`, `ms-notificaciones` y `ms-tickets`.
+5. Contrato de catálogo (ruta, JSON, códigos de error), pendiente de Gerardo; HTTPS y servicio consumidor interno de `CatalogoClient`.
+6. Mecanismo final de la clave de pruebas (inicializador compartido o `@DynamicPropertySource`).
+7. Tratamiento de los hallazgos de SpotBugs/FindSecBugs y OWASP que surjan.
 
-## 13. Revisión y aprobación del plan
+## 15. Fases de implementación
 
-**Estado actual:** Plan preliminar preparado antes de implementar código.
+Cada fase termina con `.\mvnw.cmd -B verify` y no se inicia hasta que la anterior esté aprobada.
 
-Para satisfacer la evidencia de la práctica:
+| Fase | Contenido | Pruebas |
+|---|---|---|
+| 0. Aprobación | Plan v1.0 y bitácora incorporados al repositorio | — |
+| 1. Base de seguridad | Dependencias; `application.yaml`; `JwtProperties`; `JwtConfig` (HS256, emisor, expiración con 0 s, claims y `roles` estrictos); `SecurityConfig`; `ManejadorErroresSeguridad`; clave de pruebas en memoria | Matriz con `jwt()`; conversor de roles; 18 pruebas adaptadas; `contextLoads` con la clave en memoria; `dependency:tree` y reporte OWASP |
+| 2. Login | Consulta por correo; `getPasswordHash()`; DTOs; `AuthService`; `TokenService`; `AuthController`; excepción y manejo de 401 | Casos de 11.2 |
+| 3. Pruebas criptográficas y endurecimiento | Pruebas con `JwtDecoder` real; Actuator solo `health`; `server.error.*`; `denyAll`; 401/403 frente a 404 | Casos de 11.3 y 11.4 |
+| 4. Catálogo | `RestClient`, propagación del Bearer, errores y configuración opcional; sin rutas inventadas | Casos de la sección 12 |
+| 5. Documentación | README, procedimiento B2 sin credenciales, `docs/SECURITY-REPORT.md` y bitácora | Revisión documental |
+| 6. Revisión y entrega | Agente `revisor-seguridad`, revisión de un PR de otro integrante, CI, Pull Request y tag | `.\mvnw.cmd -B verify` y CI en verde |
 
-1. Ejecutar un prompt en modo Plan/Planning/Spec.
-2. Contrastar la propuesta con el contrato JWT y los requisitos de P3.
-3. Identificar y corregir decisiones técnicas de la propuesta.
-4. Registrar las correcciones reales en `BITACORA-IA.md`.
-5. Aprobar el plan corregido antes de modificar la implementación.
-6. Incorporar el plan corregido a la descripción del PR, marcando las decisiones humanas.
-
-No se declararán como realizadas interacciones o correcciones que todavía no hayan ocurrido.
-
-## 14. Criterios de finalización
+## 16. Criterios de aceptación
 
 La práctica estará lista para revisión cuando:
 
-- El login emita JWT válidos mediante HS256.
-- Los endpoints estén protegidos según la matriz aprobada.
-- Las pruebas de seguridad e integración pasen.
-- El CI mantenga activos los controles de calidad.
-- El agente revisor y sus hallazgos estén documentados.
-- Existan al menos cuatro entradas reales de P3 en la bitácora.
-- Se haya preparado `docs/SECURITY-REPORT.md`.
-- El PR y el tag `p3-entrega` correspondan a la versión final.
+- `POST /api/auth/login` emita JWT HS256 con exactamente los claims del contrato y `expiresIn: 3600`.
+- Las credenciales incorrectas y el usuario inexistente produzcan el mismo 401 genérico.
+- Los endpoints cumplan la matriz de la sección 8, con 401, 403 y 404 diferenciados según la sección 8.1.
+- Los tokens alterados, con firma o algoritmo incorrectos, de otro emisor, expirados (incluido el instante exacto `exp`) o con `roles` inválido se rechacen con 401, y los roles válidos insuficientes reciban 403.
+- Ninguna respuesta, mensaje de error o registro exponga contraseñas, hashes, tokens, secretos ni rutas no autorizadas.
+- `JWT_SECRET` provenga solo del entorno, y no exista ningún secreto real ni fijo en archivos versionados.
+- Las pruebas que cargan el contexto usen la clave generada en memoria.
+- Actuator exponga únicamente `health`, sin detalles.
+- La infraestructura de `RestClient` esté probada con 200, 404, error y servicio no disponible, con propagación del Bearer, y sin afectar el arranque ni el login.
+- Las 18 pruebas existentes se conserven y `.\mvnw.cmd -B verify` finalice correctamente con todos los controles de calidad de P2 activos y el umbral de JaCoCo en 70 %.
+- Exista `.github/agents/revisor-seguridad.agent.md`, con el informe de hallazgos propio y el de la revisión del PR de otro integrante, con revisión humana documentada.
+- Se haya preparado `docs/SECURITY-REPORT.md` y la bitácora contenga las interacciones reales de P3.
+- El Pull Request y el tag `p3-entrega` correspondan a la versión final.
+- El contrato JWT figure como confirmado únicamente cuando los consumidores lo confirmen; mientras tanto se documenta como pendiente.
