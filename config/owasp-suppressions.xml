@@ -35,12 +35,14 @@
         <cve>CVE-2026-47893</cve>
     </suppress>
 
-    <!-- Asociación incorrecta por CPE: el CPE vmware:spring_security no distingue módulos. -->
-    <suppress until="2027-02-06Z">
+    <!-- Asociación por CPE: el CPE vmware:spring_security no distingue módulos. -->
+    <!-- P3-05C: reglas de spring-security-crypto revisadas; vencen el 2026-12-06, igual que las nuevas. -->
+    <suppress until="2026-12-06Z">
         <notes><![CDATA[
         CVE-2026-59270. Módulo realmente afectado: spring-security-ldap (UnboundIdContainer).
-        spring-security-ldap no está en el árbol de dependencias (confirmado con dependency:tree).
-        OWASP lo asocia a spring-security-crypto por el CPE del producto spring_security.
+        spring-security-crypto no contiene esa clase; OWASP lo asocia por el CPE del producto spring_security.
+        Tras P3-05 el proyecto incluye Spring Security completo, pero no spring-security-ldap ni UnboundID.
+        Aceptación temporal de riesgo; la vulnerabilidad no está corregida (la corrección 6.5.12 es Enterprise).
         Aviso oficial: https://spring.io/security/cve-2026-59270
         Revisar al vencer la regla o si se agrega LDAP embebido o spring-security-ldap.
         ]]></notes>
@@ -48,27 +50,313 @@
         <cve>CVE-2026-59270</cve>
     </suppress>
 
-    <suppress until="2027-02-06Z">
+    <suppress until="2026-12-06Z">
         <notes><![CDATA[
         CVE-2026-41707. Módulo realmente afectado: spring-security-oauth2-jose (DPoPProofJwtDecoderFactory).
-        spring-security-oauth2-jose no está en el árbol de dependencias (confirmado con dependency:tree).
-        OWASP lo asocia a spring-security-crypto por el CPE del producto spring_security.
+        spring-security-crypto no contiene esa clase; OWASP lo asocia por el CPE del producto spring_security.
+        Tras P3-05 spring-security-oauth2-jose está en el proyecto y Spring Security 6.5.11 configura
+        implícitamente el procesamiento DPoP en oauth2ResourceServer cuando esa clase está disponible.
+        La autenticación DPoP valida primero el access token y exige un token vinculado a una clave (cnf.jkt);
+        hoy el microservicio no emite tokens con ese claim. No se ha demostrado que se cumplan las
+        condiciones de explotación. La vulnerabilidad no está corregida (6.5.12 es Enterprise) y la regla es
+        una aceptación temporal de riesgo.
         Aviso oficial: https://spring.io/security/cve-2026-41707
-        Revisar al vencer la regla o al implementar JWT (P3).
+        Revisar al vencer la regla o si cambia la emisión, validación o configuración de tokens.
         ]]></notes>
         <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@6.5.11</packageUrl>
         <cve>CVE-2026-41707</cve>
     </suppress>
 
-    <suppress until="2027-02-06Z">
+    <suppress until="2026-12-06Z">
         <notes><![CDATA[
         CVE-2026-47841. Módulo realmente afectado: spring-security-web (soporte WebAuthn).
-        spring-security-web no está en el árbol de dependencias (confirmado con dependency:tree).
-        OWASP lo asocia a spring-security-crypto por el CPE del producto spring_security.
+        spring-security-crypto no contiene ese soporte; OWASP lo asocia por el CPE del producto spring_security.
+        Tras P3-05 spring-security-web sí está en el proyecto, pero WebAuthn no está habilitado.
+        Aceptación temporal de riesgo; la vulnerabilidad no está corregida (la corrección 6.5.12 es Enterprise).
         Aviso oficial: https://spring.io/security/cve-2026-47841
-        Revisar al vencer la regla o al agregar Spring Security web (P3).
+        Revisar al vencer la regla o si se habilita WebAuthn o sesiones HTTP.
         ]]></notes>
         <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@6.5.11</packageUrl>
+        <cve>CVE-2026-47841</cve>
+    </suppress>
+
+    <!-- P3-05C: ACEPTACIÓN TEMPORAL DE RIESGO de 3 CVE de Spring Security 6.5.11 en spring-security-core, -->
+    <!-- oauth2-resource-server, oauth2-core, web, config y oauth2-jose (inventario completo de compile). -->
+    <!-- NO son falsos positivos demostrados y NO están corregidos (6.5.12 es Enterprise). -->
+    <!-- Alcance académico y configuración actual de ms-usuarios; decisión del responsable del desarrollo. Vencen el 2026-12-06. -->
+    <!-- Cada regla usa el packageUrl exacto del reporte de OWASP; sin patrones. -->
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-59270 (CVSS 9.1). UnboundIdContainer (LDAP embebido) registra una credencial administrativa
+        y escucha en todas las interfaces.
+        Precondición: instanciar el servidor LDAP embebido (spring-security-ldap y UnboundID).
+        Evidencia: no hay dependencias ni código LDAP en pom.xml ni en src/.
+        Riesgo residual aceptado: bajo mientras no se agregue LDAP embebido. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-59270
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-core@6.5.11</packageUrl>
+        <cve>CVE-2026-59270</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-59270 (CVSS 9.1). UnboundIdContainer (LDAP embebido) registra una credencial administrativa
+        y escucha en todas las interfaces.
+        Precondición: instanciar el servidor LDAP embebido (spring-security-ldap y UnboundID).
+        Evidencia: no hay dependencias ni código LDAP en pom.xml ni en src/.
+        Riesgo residual aceptado: bajo mientras no se agregue LDAP embebido. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-59270
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-resource-server@6.5.11</packageUrl>
+        <cve>CVE-2026-59270</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-41707 (CVSS 7.4). DPoPProofJwtDecoderFactory: el caché de JWT ID tiene tamaño limitado y
+        puede saturarse para repetir una prueba DPoP.
+        Precondición: presentar un access token válido, firmado con nuestra clave y vinculado a una clave
+        mediante cnf.jkt, junto con una prueba DPoP reutilizable tras saturar el caché.
+        Evidencia: Spring Security 6.5.11 configura implícitamente el procesamiento DPoP en oauth2ResourceServer
+        cuando DPoPProofJwtDecoderFactory está disponible (spring-security-oauth2-jose). DPoPAuthenticationProvider
+        valida primero el access token con nuestro JwtDecoder (HS256) y exige cnf.jkt; hoy no se emiten tokens
+        con ese claim. No hay código DPoP en src/.
+        Riesgo residual aceptado temporalmente: no se ha demostrado que se cumplan las condiciones de
+        explotación. No corregido. Reevaluar si cambia la emisión, validación o configuración de tokens.
+        Aviso oficial: https://spring.io/security/cve-2026-41707
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-core@6.5.11</packageUrl>
+        <cve>CVE-2026-41707</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-41707 (CVSS 7.4). DPoPProofJwtDecoderFactory: el caché de JWT ID tiene tamaño limitado y
+        puede saturarse para repetir una prueba DPoP.
+        Precondición: presentar un access token válido, firmado con nuestra clave y vinculado a una clave
+        mediante cnf.jkt, junto con una prueba DPoP reutilizable tras saturar el caché.
+        Evidencia: Spring Security 6.5.11 configura implícitamente el procesamiento DPoP en oauth2ResourceServer
+        cuando DPoPProofJwtDecoderFactory está disponible (spring-security-oauth2-jose). DPoPAuthenticationProvider
+        valida primero el access token con nuestro JwtDecoder (HS256) y exige cnf.jkt; hoy no se emiten tokens
+        con ese claim. No hay código DPoP en src/.
+        Riesgo residual aceptado temporalmente: no se ha demostrado que se cumplan las condiciones de
+        explotación. No corregido. Reevaluar si cambia la emisión, validación o configuración de tokens.
+        Aviso oficial: https://spring.io/security/cve-2026-41707
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-resource-server@6.5.11</packageUrl>
+        <cve>CVE-2026-41707</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-47841 (CVSS 7.4). Soporte WebAuthn: evasión de la verificación de usuario con un almacén
+        de sesión HTTP distribuido.
+        Precondición: habilitar WebAuthn/passkeys junto con sesiones HTTP distribuidas.
+        Evidencia: no hay WebAuthn ni passkeys en src/; SecurityConfig es STATELESS, sin formLogin ni httpBasic.
+        Riesgo residual aceptado: bajo mientras no se habilite WebAuthn ni sesiones. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-47841
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-core@6.5.11</packageUrl>
+        <cve>CVE-2026-47841</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-47841 (CVSS 7.4). Soporte WebAuthn: evasión de la verificación de usuario con un almacén
+        de sesión HTTP distribuido.
+        Precondición: habilitar WebAuthn/passkeys junto con sesiones HTTP distribuidas.
+        Evidencia: no hay WebAuthn ni passkeys en src/; SecurityConfig es STATELESS, sin formLogin ni httpBasic.
+        Riesgo residual aceptado: bajo mientras no se habilite WebAuthn ni sesiones. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-47841
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-resource-server@6.5.11</packageUrl>
+        <cve>CVE-2026-47841</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-59270 (CVSS 9.1). UnboundIdContainer (LDAP embebido) registra una credencial administrativa
+        y escucha en todas las interfaces.
+        Precondición: instanciar el servidor LDAP embebido (spring-security-ldap y UnboundID).
+        Evidencia: no hay dependencias ni código LDAP en pom.xml, en src/ ni en el árbol de dependencias.
+        Riesgo residual aceptado temporalmente: bajo mientras no se agregue LDAP embebido. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-59270
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-core@6.5.11</packageUrl>
+        <cve>CVE-2026-59270</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-59270 (CVSS 9.1). UnboundIdContainer (LDAP embebido) registra una credencial administrativa
+        y escucha en todas las interfaces.
+        Precondición: instanciar el servidor LDAP embebido (spring-security-ldap y UnboundID).
+        Evidencia: no hay dependencias ni código LDAP en pom.xml, en src/ ni en el árbol de dependencias.
+        Riesgo residual aceptado temporalmente: bajo mientras no se agregue LDAP embebido. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-59270
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-web@6.5.11</packageUrl>
+        <cve>CVE-2026-59270</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-41707 (CVSS 7.4). DPoPProofJwtDecoderFactory: el caché de JWT ID tiene tamaño limitado y
+        puede saturarse para repetir una prueba DPoP.
+        Precondición: presentar un access token válido, firmado con nuestra clave y vinculado a una clave
+        mediante cnf.jkt, junto con una prueba DPoP reutilizable tras saturar el caché.
+        Evidencia: Spring Security 6.5.11 configura implícitamente el procesamiento DPoP en oauth2ResourceServer
+        cuando DPoPProofJwtDecoderFactory está disponible (spring-security-oauth2-jose). DPoPAuthenticationProvider
+        valida primero el access token con nuestro JwtDecoder (HS256) y exige cnf.jkt; hoy no se emiten tokens
+        con ese claim. No hay código DPoP en src/.
+        Riesgo residual aceptado temporalmente: no se ha demostrado que se cumplan las condiciones de
+        explotación. No corregido. Reevaluar si cambia la emisión, validación o configuración de tokens.
+        Aviso oficial: https://spring.io/security/cve-2026-41707
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-core@6.5.11</packageUrl>
+        <cve>CVE-2026-41707</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-41707 (CVSS 7.4). DPoPProofJwtDecoderFactory: el caché de JWT ID tiene tamaño limitado y
+        puede saturarse para repetir una prueba DPoP.
+        Precondición: presentar un access token válido, firmado con nuestra clave y vinculado a una clave
+        mediante cnf.jkt, junto con una prueba DPoP reutilizable tras saturar el caché.
+        Evidencia: Spring Security 6.5.11 configura implícitamente el procesamiento DPoP en oauth2ResourceServer
+        cuando DPoPProofJwtDecoderFactory está disponible (spring-security-oauth2-jose). DPoPAuthenticationProvider
+        valida primero el access token con nuestro JwtDecoder (HS256) y exige cnf.jkt; hoy no se emiten tokens
+        con ese claim. No hay código DPoP en src/.
+        Riesgo residual aceptado temporalmente: no se ha demostrado que se cumplan las condiciones de
+        explotación. No corregido. Reevaluar si cambia la emisión, validación o configuración de tokens.
+        Aviso oficial: https://spring.io/security/cve-2026-41707
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-web@6.5.11</packageUrl>
+        <cve>CVE-2026-41707</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-47841 (CVSS 7.4). Soporte WebAuthn: evasión de la verificación de usuario con un almacén
+        de sesión HTTP distribuido.
+        Precondición: habilitar WebAuthn/passkeys (http.webAuthn) junto con sesiones HTTP distribuidas.
+        Evidencia: no hay WebAuthn ni passkeys en src/; WebAuthnConfigurer solo se aplica con http.webAuthn(),
+        que no se invoca; webauthn4j y Spring Session no están en el árbol de dependencias.
+        SecurityConfig es STATELESS, sin formLogin ni httpBasic.
+        Riesgo residual aceptado temporalmente: bajo mientras no se habilite WebAuthn ni sesiones. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-47841
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-core@6.5.11</packageUrl>
+        <cve>CVE-2026-47841</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-47841 (CVSS 7.4). Soporte WebAuthn: evasión de la verificación de usuario con un almacén
+        de sesión HTTP distribuido.
+        Precondición: habilitar WebAuthn/passkeys (http.webAuthn) junto con sesiones HTTP distribuidas.
+        Evidencia: no hay WebAuthn ni passkeys en src/; WebAuthnConfigurer solo se aplica con http.webAuthn(),
+        que no se invoca; webauthn4j y Spring Session no están en el árbol de dependencias.
+        SecurityConfig es STATELESS, sin formLogin ni httpBasic.
+        Riesgo residual aceptado temporalmente: bajo mientras no se habilite WebAuthn ni sesiones. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-47841
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-web@6.5.11</packageUrl>
+        <cve>CVE-2026-47841</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-59270 (CVSS 9.1). UnboundIdContainer (LDAP embebido) registra una credencial administrativa
+        y escucha en todas las interfaces.
+        Precondición: instanciar el servidor LDAP embebido (spring-security-ldap y UnboundID).
+        Evidencia: spring-security-config contiene configuradores de LDAP, pero no UnboundIdContainer; no hay
+        dependencias ni código LDAP en pom.xml, en src/ ni en el árbol de dependencias.
+        Riesgo residual aceptado temporalmente: bajo mientras no se agregue LDAP embebido. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-59270
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-config@6.5.11</packageUrl>
+        <cve>CVE-2026-59270</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-59270 (CVSS 9.1). UnboundIdContainer (LDAP embebido) registra una credencial administrativa
+        y escucha en todas las interfaces.
+        Precondición: instanciar el servidor LDAP embebido (spring-security-ldap y UnboundID).
+        Evidencia: no hay dependencias ni código LDAP en pom.xml, en src/ ni en el árbol de dependencias.
+        Riesgo residual aceptado temporalmente: bajo mientras no se agregue LDAP embebido. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-59270
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-jose@6.5.11</packageUrl>
+        <cve>CVE-2026-59270</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-41707 (CVSS 7.4). DPoPProofJwtDecoderFactory: el caché de JWT ID tiene tamaño limitado y
+        puede saturarse para repetir una prueba DPoP.
+        Precondición: presentar un access token válido, firmado con nuestra clave y vinculado a una clave
+        mediante cnf.jkt, junto con una prueba DPoP reutilizable tras saturar el caché.
+        Evidencia: spring-security-config contiene DPoPAuthenticationConfigurer, que Spring Security 6.5.11
+        aplica implícitamente en oauth2ResourceServer cuando DPoPProofJwtDecoderFactory está disponible.
+        DPoPAuthenticationProvider valida primero el access token con nuestro JwtDecoder (HS256) y exige
+        cnf.jkt; hoy no se emiten tokens con ese claim. No hay código DPoP en src/.
+        Riesgo residual aceptado temporalmente: no se ha demostrado que se cumplan las condiciones de
+        explotación. No corregido. Reevaluar si cambia la emisión, validación o configuración de tokens.
+        Aviso oficial: https://spring.io/security/cve-2026-41707
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-config@6.5.11</packageUrl>
+        <cve>CVE-2026-41707</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-41707 (CVSS 7.4). DPoPProofJwtDecoderFactory: el caché de JWT ID tiene tamaño limitado y
+        puede saturarse para repetir una prueba DPoP.
+        Este módulo SÍ contiene la clase vulnerable (DPoPProofJwtDecoderFactory) y está en uso como
+        dependencia de JWT. La regla es una aceptación temporal de riesgo bajo la configuración actual,
+        no implica ausencia de la vulnerabilidad.
+        Precondición: presentar un access token válido, firmado con nuestra clave y vinculado a una clave
+        mediante cnf.jkt, junto con una prueba DPoP reutilizable tras saturar el caché.
+        Evidencia: Spring Security 6.5.11 configura implícitamente el procesamiento DPoP en oauth2ResourceServer
+        cuando esta clase está disponible. DPoPAuthenticationProvider valida primero el access token con
+        nuestro JwtDecoder (HS256) y exige cnf.jkt; hoy no se emiten tokens con ese claim. No hay código
+        DPoP en src/.
+        Riesgo residual aceptado temporalmente: no se ha demostrado que se cumplan las condiciones de
+        explotación. No corregido. Reevaluar si cambia la emisión, validación o configuración de tokens.
+        Aviso oficial: https://spring.io/security/cve-2026-41707
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-jose@6.5.11</packageUrl>
+        <cve>CVE-2026-41707</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-47841 (CVSS 7.4). Soporte WebAuthn: evasión de la verificación de usuario con un almacén
+        de sesión HTTP distribuido.
+        Precondición: habilitar WebAuthn/passkeys (http.webAuthn) junto con sesiones HTTP distribuidas.
+        Evidencia: spring-security-config contiene WebAuthnConfigurer, que solo se aplica con http.webAuthn(),
+        que no se invoca; no hay WebAuthn ni passkeys en src/; webauthn4j y Spring Session no están en el
+        árbol de dependencias. SecurityConfig es STATELESS, sin formLogin ni httpBasic.
+        Riesgo residual aceptado temporalmente: bajo mientras no se habilite WebAuthn ni sesiones. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-47841
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-config@6.5.11</packageUrl>
+        <cve>CVE-2026-47841</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        CVE-2026-47841 (CVSS 7.4). Soporte WebAuthn: evasión de la verificación de usuario con un almacén
+        de sesión HTTP distribuido.
+        Precondición: habilitar WebAuthn/passkeys (http.webAuthn) junto con sesiones HTTP distribuidas.
+        Evidencia: no hay WebAuthn ni passkeys en src/ ni en la configuración; webauthn4j y Spring Session no
+        están en el árbol de dependencias. SecurityConfig es STATELESS, sin formLogin ni httpBasic.
+        Riesgo residual aceptado temporalmente: bajo mientras no se habilite WebAuthn ni sesiones. No corregido.
+        Aviso oficial: https://spring.io/security/cve-2026-47841
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-oauth2-jose@6.5.11</packageUrl>
         <cve>CVE-2026-47841</cve>
     </suppress>
 
