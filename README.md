@@ -374,7 +374,7 @@ Las pruebas funcionales manuales PF-01 a PF-23 (Postman, Spring Boot y PostgreSQ
 En la Práctica 1 el proyecto incluía 13 pruebas automatizadas, verificadas con la siguiente salida (fecha 04/11/2026). Este resultado corresponde a esa etapa y no al estado actual.
 
 ```text
-Tests run: 13, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 18, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
@@ -431,4 +431,4 @@ Estado de la integración, separado en tres partes:
 - **Integración efectiva de los consumidores: pendiente de verificación.** La emisión y la validación local de JWT en MS-Usuarios están implementadas y probadas. La configuración de validación en los demás microservicios no ha sido verificada como integrada en este repositorio.
 - **Contrato JWT y pruebas entre microservicios: pendientes.** El contrato compartido está pendiente de confirmación por los equipos consumidores, y las pruebas de integración entre microservicios no se han realizado.
 
-La integración saliente con `ms-catalogo` mediante `RestClient` es un trabajo distinto y permanece pendiente.
+La integración HTTP saliente con `ms-catalogo` mediante `RestClient` está implementada y cuenta con pruebas automatizadas que utilizan `MockRestServiceServer`. El cliente permite consultar `GET /api/categorias`, propaga el JWT Bearer del contexto autenticado y contempla tiempos de espera y manejo de errores HTTP. La integración extremo a extremo con el microservicio real y su incorporación a un flujo funcional de MS-Usuarios permanecen pendientes de validación.
