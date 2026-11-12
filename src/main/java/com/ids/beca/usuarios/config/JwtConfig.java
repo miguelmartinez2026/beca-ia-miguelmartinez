@@ -2,6 +2,8 @@ package com.ids.beca.usuarios.config;
 
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -9,6 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -17,8 +20,10 @@ import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.jwt.JwtClaimValidator;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtIssuerValidator;
 import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
+import org.springframework.security.oauth2.jwt.MappedJwtClaimSetConverter;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
@@ -51,6 +56,7 @@ public class JwtConfig {
 				.build();
 		JwtTimestampValidator expiracion = new JwtTimestampValidator(Duration.ZERO);
 		expiracion.setClock(reloj);
+		decoder.setClaimSetConverter(exigirIatAntesDeConvertir());
 		decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
 				new JwtIssuerValidator(emisor),
 				expiracion,
@@ -59,6 +65,21 @@ public class JwtConfig {
 				subjectObligatorio(),
 				new RolesClaimValidator()));
 		return decoder;
+	}
+
+	/**
+	 * Spring completa {@code iat} durante la conversión de claims, por lo que la presencia
+	 * debe comprobarse sobre los claims originales del token.
+	 */
+	private static Converter<Map<String, Object>, Map<String, Object>> exigirIatAntesDeConvertir() {
+		Converter<Map<String, Object>, Map<String, Object>> conversionPorDefecto =
+				MappedJwtClaimSetConverter.withDefaults(Collections.emptyMap());
+		return claims -> {
+			if (claims.get(JwtClaimNames.IAT) == null) {
+				throw new JwtException("El JWT no contiene el claim obligatorio iat");
+			}
+			return conversionPorDefecto.convert(claims);
+		};
 	}
 
 	private static OAuth2TokenValidator<Jwt> claimObligatorio(String claim) {
