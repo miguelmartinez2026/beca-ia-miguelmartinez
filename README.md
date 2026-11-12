@@ -35,7 +35,7 @@ Al registrar un usuario, el servidor asigna automáticamente el rol `SOLICITANTE
 
 Las contraseñas se almacenan mediante hashes BCrypt y no se incluyen en las respuestas de la API.
 
-La Práctica 3 incorpora autenticación con JWT y autorización por roles. Las secciones siguientes describen el estado actual del microservicio. La Práctica 3 no está finalizada: quedan pendientes la revocación de tokens, la integración con `ms-catalogo` y la confirmación del contrato JWT con los demás microservicios (ver las secciones 10 y 11).
+La Práctica 3 incorpora autenticación con JWT y autorización por roles. Las secciones siguientes describen el estado actual del microservicio. La Práctica 3 no está finalizada: quedan pendientes la integración con `ms-catalogo`, la confirmación del contrato JWT con los consumidores, la revisión cruzada de un PR y la entrega final. La ausencia de revocación inmediata de JWT es un riesgo abierto, documentado por separado (ver las secciones 10 y 11).
 
 ## 1. Descripción y alcance
 
@@ -247,6 +247,8 @@ Authorization: Bearer <JWT>
 
 El token está firmado con HS256 mediante la clave de `JWT_SECRET`. Para el entorno de integración del Equipo 4, la clave es única y compartida (ver la sección 3). El emisor es `ms-usuarios` y la vigencia es de 3600 segundos. El servicio es stateless: no consulta una base de datos ni una lista de revocación al validar un token. Por ello, un token sigue siendo aceptado hasta su expiración, incluso si la cuenta fue eliminada (ver la sección 10).
 
+La validación criptográfica se prueba con el `JwtDecoder` real, además de las pruebas de autorización que utilizan `jwt()` de Spring Security Test. Se incorporó una comprobación explícita de que `iat` estuviera presente en los claims originales, antes de la conversión de Spring, y pruebas HTTP que rechazan un JWT firmado sin `iat` con **401**; un token equivalente con `iat` válido permite la operación autorizada (**200**).
+
 ## 7. Permisos y endpoints
 
 | Método | Ruta | Acceso |
@@ -354,16 +356,18 @@ Las operaciones de la Práctica 1 fueron verificadas manualmente mediante Postma
 
 ## 9. Calidad y pruebas
 
-Resultados verificados de la verificación integral (`.\mvnw.cmd -B clean verify`):
+**Última verificación integral reportada** (`.\mvnw.cmd -B clean verify`), después del refuerzo criptográfico de P3:
 
-- 79 pruebas automatizadas aprobadas, 0 fallos, 0 errores y 0 omitidas.
-- JaCoCo: 88.40 % de cobertura de líneas (221/250) y 86.99 % de cobertura de instrucciones.
-- Checkstyle, PMD, CPD y SpotBugs sin hallazgos reportados.
-- OWASP Dependency-Check completado, con vulnerabilidades pendientes de tratamiento (ver la sección 10).
+- **102 pruebas automatizadas aprobadas**, 0 fallos, 0 errores y 0 omitidas; resultado `BUILD SUCCESS`.
+- Checkstyle, PMD, CPD y SpotBugs sin hallazgos que impidan superar los controles de calidad.
+- OWASP Dependency-Check completado con las supresiones documentadas. Superar el control no significa que las vulnerabilidades estén corregidas; hay riesgos y decisiones de aceptación pendientes (ver la sección 10).
+- **Referencia histórica de P3-06 (79 pruebas):** JaCoCo registró 88.40 % de cobertura de líneas (221/250) y 86.99 % de cobertura de instrucciones. Estas cifras pertenecen a esa ejecución anterior y **no deben atribuirse automáticamente a la verificación de 102 pruebas** sin consultar sus reportes correspondientes.
 
-Los detalles, el historial y las limitaciones están en [docs/QUALITY-REPORT.md](docs/QUALITY-REPORT.md).
+El refuerzo posterior incluye `JwtDecoderCriptografiaTest` y `UsuarioControllerJwtSinIatTest`, además de la corrección en `JwtConfig` para rechazar tokens que no contenían originalmente el claim `iat`.
 
-Las pruebas funcionales manuales PF-01 a PF-23 (Postman, Spring Boot y PostgreSQL) están documentadas en `BITACORA-IA.md`. Son evidencia complementaria de integración y **no forman parte de las 79 pruebas automatizadas**. No constituyen una auditoría de seguridad completa.
+Los detalles, el historial y las limitaciones están en [docs/QUALITY-REPORT.md](docs/QUALITY-REPORT.md), [docs/SECURITY-REPORT.md](docs/SECURITY-REPORT.md) y `BITACORA-IA.md`.
+
+Las pruebas funcionales manuales PF-01 a PF-23 (Postman, Spring Boot y PostgreSQL) están documentadas en `BITACORA-IA.md`. Son evidencia complementaria de integración y **no forman parte de las 102 pruebas automatizadas**. No constituyen una auditoría de seguridad completa.
 
 ### Historial de la Práctica 1
 
@@ -387,7 +391,7 @@ La documentación de la Práctica 1 se encuentra organizada en:
 - `prompts/pruebas.md`: planificación e implementación de pruebas.
 - `BITACORA-IA.md`: interacciones relevantes con Copilot, resultados y correcciones realizadas.
 
-Los prompts documentan las instrucciones utilizadas durante el desarrollo, incluyendo las revisiones y ajustes posteriores.
+Los prompts documentan las instrucciones utilizadas durante el desarrollo, incluyendo las revisiones y ajustes posteriores. La documentación de seguridad de P3 se encuentra en `docs/planes/PLAN-SEGURIDAD-P3.md` y `docs/SECURITY-REPORT.md`; las interacciones con IA y la revisión humana están en `BITACORA-IA.md`.
 
 ## 10. Seguridad y limitaciones
 
@@ -395,6 +399,9 @@ Documentación de referencia:
 
 - [docs/SECURITY-REPORT.md](docs/SECURITY-REPORT.md): riesgos, análisis OWASP y controles JWT.
 - [docs/planes/PLAN-SEGURIDAD-P3.md](docs/planes/PLAN-SEGURIDAD-P3.md): plan de la Práctica 3, decisiones y estado de ejecución.
+- [`.github/agents/revisor-seguridad.agent.md`](.github/agents/revisor-seguridad.agent.md): agente de revisión de seguridad, limitado a análisis y consulta.
+
+La ejecución del agente revisor identificó **11 hallazgos**: 0 críticos, 2 altos, 4 medios y 5 bajos. Son observaciones que requieren revisión y seguimiento; la existencia del informe no demuestra su remediación. El detalle y las decisiones humanas constan en `docs/SECURITY-REPORT.md` y `BITACORA-IA.md`.
 
 Limitaciones actuales:
 
