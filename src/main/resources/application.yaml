@@ -27,6 +27,12 @@ seguridad:
     issuer: ms-usuarios
     expiracion-segundos: 3600
 
+integracion:
+  catalogo:
+    url: ${SERVICIOS_CATALOGO_URL:}
+    connection-timeout-ms: 5000
+    read-timeout-ms: 10000
+
 management:
   endpoints:
     web:
