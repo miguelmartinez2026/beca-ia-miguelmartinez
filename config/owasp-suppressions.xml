@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!-- Asociación incorrecta por CPE: el CPE vmware:spring_framework no distingue módulos. -->
+    <!-- La lista cerrada corresponde a los 12 artefactos 6.2.19 agrupados por OWASP. -->
+    <suppress until="2027-02-06Z">
+        <notes><![CDATA[
+        CVE-2026-47888. Módulo realmente afectado: spring-messaging (RSocketMessageHandler).
+        spring-messaging no está en el árbol de dependencias (confirmado con dependency:tree).
+        OWASP asocia el CVE a otros módulos de Spring Framework porque el CPE vmware:spring_framework
+        identifica el producto y la versión, no el módulo.
+        El JSON de la revisión del 09/11 identifica los 12 artefactos del patrón como parte
+        de los grupos con esta asociación. Véase la sección 6.9.4 del informe.
+        Aviso oficial: https://spring.io/security/cve-2026-47888
+        Revisar al vencer la regla o si se agrega spring-messaging o RSocket.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47888</cve>
+    </suppress>
+
+    <suppress until="2027-02-06Z">
+        <notes><![CDATA[
+        CVE-2026-47893. Módulo realmente afectado: spring-webflux (HandshakeWebSocketService).
+        spring-webflux no está en el árbol de dependencias (confirmado con dependency:tree).
+        OWASP asocia el CVE a otros módulos de Spring Framework porque el CPE vmware:spring_framework
+        identifica el producto y la versión, no el módulo.
+        El JSON de la revisión del 09/11 identifica los 12 artefactos del patrón como parte
+        de los grupos con esta asociación. Véase la sección 6.9.4 del informe.
+        Aviso oficial: https://spring.io/security/cve-2026-47893
+        Revisar al vencer la regla o si se agrega spring-webflux.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47893</cve>
+    </suppress>
+
+    <!-- Asociación incorrecta por CPE: el CPE vmware:spring_security no distingue módulos. -->
+    <suppress until="2027-02-06Z">
+        <notes><![CDATA[
+        CVE-2026-59270. Módulo realmente afectado: spring-security-ldap (UnboundIdContainer).
+        spring-security-ldap no está en el árbol de dependencias (confirmado con dependency:tree).
+        OWASP lo asocia a spring-security-crypto por el CPE del producto spring_security.
+        Aviso oficial: https://spring.io/security/cve-2026-59270
+        Revisar al vencer la regla o si se agrega LDAP embebido o spring-security-ldap.
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@6.5.11</packageUrl>
+        <cve>CVE-2026-59270</cve>
+    </suppress>
+
+    <suppress until="2027-02-06Z">
+        <notes><![CDATA[
+        CVE-2026-41707. Módulo realmente afectado: spring-security-oauth2-jose (DPoPProofJwtDecoderFactory).
+        spring-security-oauth2-jose no está en el árbol de dependencias (confirmado con dependency:tree).
+        OWASP lo asocia a spring-security-crypto por el CPE del producto spring_security.
+        Aviso oficial: https://spring.io/security/cve-2026-41707
+        Revisar al vencer la regla o al implementar JWT (P3).
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@6.5.11</packageUrl>
+        <cve>CVE-2026-41707</cve>
+    </suppress>
+
+    <suppress until="2027-02-06Z">
+        <notes><![CDATA[
+        CVE-2026-47841. Módulo realmente afectado: spring-security-web (soporte WebAuthn).
+        spring-security-web no está en el árbol de dependencias (confirmado con dependency:tree).
+        OWASP lo asocia a spring-security-crypto por el CPE del producto spring_security.
+        Aviso oficial: https://spring.io/security/cve-2026-47841
+        Revisar al vencer la regla o al agregar Spring Security web (P3).
+        ]]></notes>
+        <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@6.5.11</packageUrl>
+        <cve>CVE-2026-47841</cve>
+    </suppress>
+
+    <!-- P2-22: ACEPTACIÓN TEMPORAL DE RIESGO de 10 CVE de Spring Framework 6.2.19. NO son falsos positivos y NO están corregidos. -->
+    <!-- Decisión del responsable del desarrollo; no hay aprobación de un tercero. Vencen el 2026-12-06. -->
+    <!-- El JSON de la revisión del 09/11 identifica los 12 artefactos del patrón mediante relatedDependencies. -->
+    <!-- Detalle por CVE en docs/QUALITY-REPORT.md, sección 6.8. -->
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-47884 (NVD 9.8; aviso de Spring: MEDIUM). spring-webmvc 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: XsltView con un mapping /** que renderiza vistas sin nombre de vista explícito (SSRF y RCE).
+        Evidencia local: sin XsltView ni ViewResolver en src, sin motor de vistas en pom.xml; solo un @RestController.
+        Limitación: no se inspeccionó el despliegue ni se descartó código de terceros que registre vistas XSLT.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-47884
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-47884.
+        Reevaluar al vencer o si se agregan vistas (XSLT, plantillas) o mappings /** que rendericen vistas.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47884</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-47885 (NVD 7.5; aviso de Spring: MEDIUM). spring-web 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: método de controlador con @RequestBody Flux<PartEvent> y maxInMemorySize en -1 (DoS).
+        Evidencia local: sin Flux, Mono ni multipart en src; pom.xml sin WebFlux. Árbol Maven sin WebFlux ni Reactor (revisión del desarrollador).
+        Limitación: no se inspeccionó el despliegue; la ausencia en el árbol es dato proporcionado por el desarrollador.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-47885
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-47885.
+        Reevaluar al vencer o si se agregan WebFlux, Reactor o endpoints multipart.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47885</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-47886 (NVD 7.5; aviso de Spring: MEDIUM). spring-expression 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: la aplicación evalúa SpEL controlado por el usuario y hay un BigDecimal o BigInteger accesible (DoS con el operador ^).
+        Evidencia local: sin SpelExpressionParser, @Value, @Query ni #{} en src; sin actuator en pom.xml.
+        Limitación: no se analizó si librerías de terceros evalúan SpEL con entrada del usuario.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-47886
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-47886.
+        Reevaluar al vencer o si se evalúan expresiones SpEL con datos del usuario (por ejemplo, en la autorización de P3).
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47886</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-47890 (NVD 9.8; aviso de Spring: LOW). Spring Framework 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: Spring MVC o WebFlux envía fragmentos de vista por SSE y un atacante controla datos transmitidos a otros usuarios.
+        Evidencia local: sin SseEmitter ni text/event-stream en src; sin motor de plantillas en pom.xml.
+        Limitación: no se inspeccionó el despliegue.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-47890
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-47890.
+        Reevaluar al vencer o si se agregan SSE o plantillas de vista.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47890</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-47891 (NVD 9.8; aviso de Spring: MEDIUM). Spring Framework 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: aplicación WebFlux que usa el procesador XML Aalto; no se aplica maxInMemorySize en Jaxb2Decoder.
+        Evidencia local: sin XML, Jaxb ni WebFlux en src; Aalto no figura en pom.xml. Árbol Maven sin WebFlux, Reactor ni Aalto (revisión del desarrollador).
+        Limitación: la ausencia en el árbol es dato proporcionado por el desarrollador; no se inspeccionó el despliegue.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-47891
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-47891.
+        Reevaluar al vencer o si se incorporan dependencias reactivas o procesamiento XML.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47891</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-47892 (NVD 9.8; aviso de Spring: MEDIUM). Spring Framework 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: endpoints funcionales con DispatcherServlet y predicado de cabecera en una solicitud preflight (omisión del predicado).
+        Evidencia local: sin RouterFunction ni ServerResponse en src; sin @CrossOrigin ni configuración CORS; el mapeo es solo con anotaciones.
+        Limitación: no se inspeccionó el despliegue ni el comportamiento de intermediarios.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-47892
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-47892.
+        Reevaluar al vencer o si se agregan endpoints funcionales, CORS o WebFlux.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47892</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-59282 (NVD 7.5; aviso de Spring: MEDIUM). Spring Framework 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: data binding de rutas de propiedades del usuario sobre un objeto con una List auto-poblada cuyos elementos tienen subpropiedades (DoS).
+        Evidencia local: el controlador solo usa @PathVariable Long y @Valid @RequestBody (JSON con Jackson); sin @ModelAttribute, DataBinder ni BeanWrapper; sin List como propiedad en DTO ni entidades.
+        Limitación: no se analizó código de terceros que use el binding; no se inspeccionó el despliegue.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-59282
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-59282.
+        Reevaluar al vencer o si se agrega binding de formularios o parámetros a objetos, o colecciones en los DTO.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-59282</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-59283 (NVD 9.1; aviso de Spring: MEDIUM). spring-expression 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: evaluación de SpEL con SimpleEvaluationContext y compilación activa en modo
+        IMMEDIATE o MIXED, por propiedad o mediante SpelParserConfiguration.
+        Evidencia local: sin SpEL en src; application.yaml no define spring.expression.compiler.mode; no existe spring.properties; el desarrollador no halló variables que activen el compilador.
+        Limitación: ci.yml verifica el proyecto en GitHub Actions. Queda pendiente inspeccionar
+        las opciones de JVM, el entorno y la configuración del despliegue productivo, así como
+        el uso de SimpleEvaluationContext en código de terceros.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-59283
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-59283.
+        Reevaluar al vencer o si se activa el compilador SpEL o se usa SimpleEvaluationContext.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-59283</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-59313 (NVD 9.8; aviso de Spring: LOW). Spring Framework 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: framework funcional de Spring MVC (RouterFunction, ServerResponse.sse()) con SSE en texto plano y datos controlados por un atacante.
+        Evidencia local: sin RouterFunction, ServerResponse ni SSE en src.
+        Limitación: no se inspeccionó el despliegue.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-59313
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-59313.
+        Reevaluar al vencer o si se agregan endpoints funcionales o SSE.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-59313</cve>
+    </suppress>
+
+    <suppress until="2026-12-06Z">
+        <notes><![CDATA[
+        ACEPTACIÓN TEMPORAL DE RIESGO (P2-22). NO es un falso positivo ni una corrección.
+        CVE-2026-47889 (NVD 7.5; aviso de Spring: MEDIUM). Spring Framework 6.2.19 está en el rango afectado (6.2.0 - 6.2.19).
+        Condición: aplicación WebFlux sobre el adaptador Jetty 12 Core; las cookies se serializan sin el atributo sameSite.
+        Evidencia local: spring-boot-starter-web (servidor Tomcat) sin exclusiones; sin cookies, WebFlux ni Jetty en src ni en pom.xml. Árbol Maven sin Jetty, WebFlux ni Reactor (revisión del desarrollador).
+        Limitación: la ausencia en el árbol es dato proporcionado por el desarrollador; no se inspeccionó el despliegue.
+        Corrección: 6.2.20 solo con soporte Enterprise; 7.0.9 (código abierto) pertenece a Spring Framework 7.
+        Aviso oficial: https://spring.io/security/cve-2026-47889
+        Informe: docs/QUALITY-REPORT.md, sección 6.8, fila CVE-2026-47889.
+        Reevaluar al vencer o si se cambia a Jetty, se agrega WebFlux o la aplicación empieza a emitir cookies.
+        ]]></notes>
+        <packageUrl regex="true" caseSensitive="true">^pkg:maven/org\.springframework/spring-(aop|aspects|beans|context|core|expression|jcl|jdbc|orm|tx|web|webmvc)@6\.2\.19$</packageUrl>
+        <cve>CVE-2026-47889</cve>
+    </suppress>
+
+</suppressions>

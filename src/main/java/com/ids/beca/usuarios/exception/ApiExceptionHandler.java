@@ -31,6 +31,10 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 	private static final String SQLSTATE_CHECK_VIOLATION = "23514";
 	private static final String CHECK_EMAIL_NORMALIZADO = "ck_usuarios_email_normalizado";
+	private static final String MENSAJE_DATOS_INVALIDOS = "La solicitud contiene datos inválidos.";
+	private static final String ERRORS_PROPERTY = "errors";
+	private static final String CLAVE_CAMPO = "campo";
+	private static final String CLAVE_MENSAJE = "mensaje";
 
 	@ExceptionHandler(UsuarioNoEncontradoException.class)
 	public ProblemDetail manejarNoEncontrado(UsuarioNoEncontradoException ex) {
@@ -46,9 +50,10 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	public ProblemDetail manejarIntegridad(DataIntegrityViolationException ex) {
 		if (esViolacionDeEmailNormalizado(ex)) {
 			ProblemDetail problema = ProblemDetail.forStatusAndDetail(
-					HttpStatus.BAD_REQUEST, "La solicitud contiene datos inválidos.");
-			problema.setProperty("errors", List.of(
-					Map.of("campo", "email", "mensaje", "el correo electrónico no tiene un formato válido")));
+					HttpStatus.BAD_REQUEST, MENSAJE_DATOS_INVALIDOS);
+			problema.setProperty(ERRORS_PROPERTY, List.of(Map.of(
+					CLAVE_CAMPO, "email",
+					CLAVE_MENSAJE, "el correo electrónico no tiene un formato válido")));
 			return problema;
 		}
 		return errorInesperado(ex);
@@ -64,13 +69,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		List<Map<String, String>> errores = ex.getBindingResult().getFieldErrors().stream()
 				.sorted(Comparator.comparing(FieldError::getField)
-						.thenComparing(error -> Objects.requireNonNullElse(error.getDefaultMessage(), "")))
+						.thenComparing(error -> Objects.requireNonNullElse(
+								error.getDefaultMessage(), "")))
 				.map(error -> Map.of(
-						"campo", error.getField(),
-						"mensaje", Objects.requireNonNullElse(error.getDefaultMessage(), "valor inválido")))
+						CLAVE_CAMPO, error.getField(),
+						CLAVE_MENSAJE, Objects.requireNonNullElse(
+								error.getDefaultMessage(), "valor inválido")))
 				.toList();
-		ProblemDetail problema = ProblemDetail.forStatusAndDetail(status, "La solicitud contiene datos inválidos.");
-		problema.setProperty("errors", errores);
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(status, MENSAJE_DATOS_INVALIDOS);
+		problema.setProperty(ERRORS_PROPERTY, errores);
 		return handleExceptionInternal(ex, problema, headers, status, request);
 	}
 
@@ -95,14 +102,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 		log.error("Error inesperado: {} (causa raíz: {})",
 				ex.getClass().getName(),
 				NestedExceptionUtils.getMostSpecificCause(ex).getClass().getName());
-		return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un error inesperado.");
+		return ProblemDetail.forStatusAndDetail(
+				HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un error inesperado.");
 	}
 
 	private boolean esViolacionDeEmailNormalizado(Throwable error) {
 		for (Throwable causa = error; causa != null; causa = causa.getCause()) {
 			if (causa instanceof ConstraintViolationException violacion) {
 				return SQLSTATE_CHECK_VIOLATION.equals(violacion.getSQLState())
-						&& CHECK_EMAIL_NORMALIZADO.equalsIgnoreCase(violacion.getConstraintName());
+						&& CHECK_EMAIL_NORMALIZADO.equalsIgnoreCase(
+								violacion.getConstraintName());
 			}
 		}
 		return false;
