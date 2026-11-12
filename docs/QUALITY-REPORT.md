@@ -3,6 +3,7 @@ Práctica: P2 — Calidad como código con instrucciones y skills
 Fecha de línea base: 06/11/2026
 Última actualización documental: 09/11/2026 (hora de Ciudad de México, UTC−06:00; cierre local y CI del PR #5)
 Rama de trabajo: practica-2
+Actualización documental P3: véase la sección 12 (P3-05 y P3-06; evidencia existente, sin reejecutar Maven).
 Alcance: Java 21, Spring Boot 3.5.16, Maven y análisis de calidad de ms-usuarios.
 
 Estado ejecutivo: El 09/11/2026 a las 19:02:34 (UTC−06:00), la ejecución local mvnw.cmd -B clean verify concluyó con BUILD SUCCESS, 18 pruebas aprobadas, 0 fallos, 0 errores y 0 omitidas, y el gate de JaCoCo satisfecho. El reporte local de JaCoCo mostró 77.78 % de cobertura de líneas (98/126); también indicó 75 % de instrucciones (402/530) y 46 % de ramas (15/32). GitHub Actions validó el commit 62fbd69 de practica-2 con ./mvnw -B verify: 18 pruebas aprobadas, Checkstyle con 0 violaciones, SpotBugs sin incidencias y BUILD SUCCESS (CI #42733267317). El CI confirma que JaCoCo superó el mínimo de 70 %, pero no publica el porcentaje exacto; esa cifra se obtuvo del reporte local y la captura compartida durante la revisión, no archivada en GitHub.
@@ -524,3 +525,75 @@ Alcance y límites:
 - La evidencia demuestra la activación del Skill, no la ejecución de los analizadores: ambas conversaciones se limitaron a herramientas de lectura.
 - La lectura manual de SKILL.md (P2-01) es otra cosa y no se cuenta como activación automática.
 - El resultado de Maven se documenta en las secciones 4.9 y 10.3.
+
+## 12. Calidad de P3-05 y P3-06 (ms-usuarios)
+
+Esta sección documenta la evidencia disponible al cierre documental de P3. No reemplaza las mediciones de P1 y P2 (§§4 a 10), que son de alcance distinto y no deben compararse directamente con las de P3. No se reejecutaron Maven ni los análisis de seguridad; las cifras proceden de los reportes existentes en target/ o de la bitácora.
+
+### 12.1 Estado de las etapas
+
+| Etapa | Estado | Evidencia |
+|---|---|---|
+| P3-05 — Infraestructura JWT y autorización por roles | Implementada y consolidada en el commit local `9a5b295` | Commit local; sección de P3-05 en BITACORA-IA.md [V] |
+| P3-06 — Login y emisión de JWT | Implementada en el árbol de trabajo; sin commit | Pruebas automatizadas de §12.3 y pruebas manuales PF-01 a PF-23 [V]/[D] |
+| Práctica P3 completa | No declarada como terminada | Pendientes de §12.4 y §12.5 |
+
+### 12.2 Métricas verificadas de P3-06 (reportes existentes en target/)
+
+| Métrica | Valor | Fuente |
+|---|---|---|
+| Pruebas automatizadas | 79 ejecutadas; 0 fallos, 0 errores, 0 omitidas | Surefire: 15 suites en target/surefire-reports/ [V] |
+| Cobertura de líneas (JaCoCo) | 88.40 % (221 cubiertas, 29 no cubiertas; 250 totales) | target/site/jacoco/jacoco.csv, contador LINE [V] |
+| Cobertura de instrucciones | 86.99 % (996 cubiertas, 149 no cubiertas) | jacoco.csv, contador INSTRUCTION [V] |
+| Ramas | 39 cubiertas, 25 no cubiertas | jacoco.csv, contador BRANCH [V] |
+| Checkstyle | 0 violaciones | target/checkstyle-result.xml [V] |
+| PMD | 0 violaciones | target/pmd.xml [V] |
+| CPD (duplicación) | 0 duplicaciones | target/cpd.xml [V] |
+| SpotBugs | 0 hallazgos | target/spotbugsXml.xml [V] |
+| OWASP Dependency-Check | 4 dependencias con vulnerabilidades activas, 10 entradas de vulnerabilidad y 8 nombres de CVE distintos; 3 dependencias con vulnerabilidades suprimidas | target/dependency-check-report.json [V]. Las vulnerabilidades activas no están corregidas; ver §12.4 |
+
+Resultado del build de P3-06: BUILD SUCCESS con clean verify, según indica el responsable del proyecto. Esa salida no se conservó en el repositorio, por lo que se registra como [D].
+
+Marcas de tiempo observadas en target/ (11/11/2026): pmd.xml, cpd.xml, spotbugsXml.xml y dependency-check-report.json entre 13:30:20 y 13:30:43; checkstyle-result.xml a las 13:45:30. Estos archivos no permiten verificar qué ejecución los generó.
+
+### 12.3 Pruebas automatizadas de P3-06
+
+Las 79 pruebas corresponden a las siguientes clases (conteo de Surefire [V]):
+
+| Clase de prueba | Pruebas | Área |
+|---|---|---|
+| JwtPropertiesTest | 6 | Configuración JWT |
+| RolesClaimValidatorTest | 15 | Validación del claim roles |
+| SecurityConfigTest | 2 | Configuración de seguridad |
+| AuthControllerTest | 4 | Controlador de autenticación (login) |
+| UsuarioControllerSeguridadTest | 23 | Autorización por roles y respuestas 401/403 |
+| UsuarioControllerTest | 8 | Controlador de usuarios |
+| CrearUsuarioRequestTest | 1 | Validación de DTO de creación |
+| LoginRequestTest | 3 | DTO de login |
+| LoginResponseTest | 1 | DTO de respuesta de login |
+| MsUsuariosApplicationTests | 1 | Contexto de la aplicación |
+| UsuarioRepositoryTest | 1 | Repositorio |
+| AuthServiceTest | 3 | Autenticación y validación de credenciales |
+| TokenServiceTest | 1 | Emisión de JWT HS256 |
+| UsuarioServiceTest | 8 | Servicio de usuarios |
+| ClaveJwtPruebasTest | 2 | Clave JWT |
+
+Este conteo describe las clases presentes en los reportes. No deduce cuántas pruebas cubren cada requisito de seguridad; los nombres de las clases no garantizan la cobertura de un requisito concreto.
+
+### 12.4 Historial, riesgos y limitaciones
+- Historial de P3-05: 66 pruebas aprobadas y cobertura JaCoCo de 86.06 %. Solo constan en BITACORA-IA.md, en la fila de P3-05, como [D]. Los reportes actuales no permiten reconstruirlas, por lo que no se comparan con las 79 pruebas de P3-06 como si fueran la misma medición. Pendiente: confirmar la fuente original si se requiere trazabilidad.
+- Comparación con P2: P2 registró 18 pruebas y 77.78 % de líneas (98/126) en §10.5. P3-06 registra 250 líneas instrumentadas. Los denominadores son distintos y la diferencia no debe interpretarse como mejora.
+- Pruebas funcionales manuales PF-01 a PF-23: evidencia complementaria de integración funcional, aportada por el responsable del proyecto y registrada como [D] en BITACORA-IA.md. No forman parte de las 79 pruebas automatizadas. Una prueba funcional exitosa no equivale a una auditoría de seguridad completa.
+- Hallazgo pendiente PF-23: un JWT ADMIN siguió siendo aceptado con HTTP 200 después de eliminar la cuenta correspondiente. Riesgo de revocación materializado; sin mitigación. No está corregido.
+- Pruebas de frontera del claim exp con el decodificador JWT real: pendientes de comprobación [P].
+- Pruebas automatizadas de firma JWT manipulada: pendientes de verificación según el plan [P]. La prueba manual PF-12 cubre el caso funcional, no sustituye la prueba automatizada.
+- Vulnerabilidades OWASP: el reporte actual contiene vulnerabilidades activas en Spring Framework y Spring Security. Las supresiones existentes en config/owasp-suppressions.xml no corrigen esas vulnerabilidades. Su vencimiento y su reevaluación figuran en docs/SECURITY-REPORT.md y en el plan P3 (§17) [V]/[P].
+- Integración con ms-catalogo: pendiente según el plan; no se documenta como implementada [P].
+- Contrato JWT compartido con otros microservicios: pendiente de confirmación por los equipos consumidores [P].
+- Cualquier cifra de P3-05 o de P3-06 que no provenga de los reportes listados en §12.2 queda fuera de esta sección.
+
+### 12.5 Información no verificada
+- Resultado completo del build de P3-06 y sus logs: no conservados en el repositorio [D].
+- Porcentaje de cobertura de P3-05 (86.06 %) y número de pruebas (66): no reconstruibles desde los reportes actuales [D].
+- Resultados de Dependency-Check fuera de target/: no archivados.
+- Prueba de exposición del hash BCrypt en todos los endpoints: pendiente de revisión exhaustiva [P].

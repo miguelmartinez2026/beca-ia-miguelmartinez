@@ -65,7 +65,29 @@ Los prompts utilizados se encuentran documentados en la carpeta `prompts/`.
 
 ## Práctica 3 — Seguridad y microservicios con agentes
 
-Entradas de las interacciones de planificación de P3 en modo Plan (solo lectura). En ninguna se modificaron archivos del repositorio, se ejecutaron comandos ni se escribió código. El modelo utilizado no consta en el registro de la sesión, por lo que no se indica. Convención de evidencia: **[V]** verificado, **[D]** dato proporcionado por mí, **[P]** pendiente.
+
+Esta sección registra las interacciones con GitHub Copilot durante
+la Práctica 3, desde la planificación de seguridad hasta su
+implementación y verificación.
+
+Las entradas P3-01 a P3-03 corresponden a planificación en modo
+Plan, sin modificaciones al repositorio. P3-04 corresponde a la
+consolidación documental mediante Agent. Las entradas posteriores
+registran implementación, pruebas automatizadas, análisis de
+seguridad y revisión humana.
+
+La revisión humana y las pruebas funcionales realizadas fuera de
+Copilot se identifican expresamente para no atribuir a la IA
+trabajos que no realizó.
+
+Cuando el modelo utilizado o el texto literal de un prompt no
+consten en la evidencia disponible, no se inventarán.
+
+Convención de evidencia:
+**[V]** verificado,
+**[D]** dato proporcionado por mí,
+**[P]** pendiente.
+
 
 | # | Fecha | Herramienta | Tipo (prompt/skill/agente) | Objetivo | Prompt o archivo | Resultado | Qué ajusté y por qué |
 |---|---|---|---|---|---|---|---|
@@ -73,3 +95,45 @@ Entradas de las interacciones de planificación de P3 en modo Plan (solo lectura
 | P3-02 | 10/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt en modo Plan | Ajustar la propuesta con decisiones humanas explícitas. | Mensaje de corrección con decisiones numeradas (no archivado en `prompts/`; descripción fiel, no transcripción). | **Propuesta de Copilot [V]:** incorporó mis decisiones y elaboró el **plan v0.3**, un documento de trabajo de la sesión que no se incorporó al repositorio. No se modificaron archivos del repositorio ni se ejecutaron comandos. | **Decisiones humanas:** (1) registro público provisional, con rol fijo `SOLICITANTE`; (2) CRUD administrativo para `ADMIN`; (3) aprovisionamiento manual del primer administrador; (4) validación de los claims del token; (5) simplificación arquitectónica; (6) inclusión de `ms-tickets` entre los consumidores del JWT; (7) pruebas con criptografía real, separadas de las pruebas con `jwt()`; (8) independencia entre la autenticación y el servicio de catálogo. La política de registro público sigue pendiente de validación de negocio **[P]**. |
 | P3-03 | 10/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt en modo Plan | Cerrar las decisiones pendientes y consolidar el plan. | Prompt «P3-03 — Cierre y consolidación del plan de seguridad» (no archivado en `prompts/`; descripción fiel, no transcripción). | **Propuesta de Copilot [V]:** consolidó las decisiones en el **plan v1.0**: resumen de correcciones, matriz de autorización aprobada, lista de componentes, secuencia de implementación con pruebas por fase y riesgos pendientes. Tras mi aprobación de la arquitectura general, el plan se incorporó a `docs/planes/PLAN-SEGURIDAD-P3.md` en una interacción posterior. | **Cambios humanos:** (1) validación estricta del claim `roles`: ausente, nulo, vacío, de tipo incorrecto o con valores desconocidos produce 401, y los roles válidos pero insuficientes producen 403; la propuesta anterior de Copilot respondía 403 en los casos de roles vacíos o desconocidos; (2) tolerancia de reloj de cero segundos, con pruebas de expiración; la propuesta anterior conservaba la tolerancia predeterminada de Spring de 60 s; (3) integración con catálogo mediante `RestClient` como entregable obligatorio, con pruebas simuladas y sin inventar rutas ni contratos; (4) consolidación documental: un único plan, con las diferencias respecto de Copilot registradas solo en esta bitácora. Además confirmé: `getPasswordHash()` solo para `AuthService`, sin hash señuelo, procedimiento manual para el primer administrador sin contraseñas en SQL ni documentación, cuatro dependencias y `spring-security-crypto`, respuesta de login con `accessToken`, `tokenType` y `expiresIn`, y errores 401/403 genéricos. El contrato JWT **no** está confirmado por todo el Equipo 4 y sigue pendiente de los consumidores **[P]**; el contrato de catálogo está pendiente de Gerardo **[P]**. |
 | P3-04 | 10/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt en modo Agent | Consolidar el plan técnico de P3 y documentar las decisiones humanas de las tres interacciones anteriores. | Prompt «P3-04 — Consolidación documental del plan de seguridad» (no archivado en `prompts/`; descripción fiel, no transcripción). | **Cambios de Copilot [V]:** actualizó `docs/planes/PLAN-SEGURIDAD-P3.md` a la **versión 1.0** y registró P3-01, P3-02 y P3-03 en esta bitácora. No se escribió código Java, no se modificaron dependencias ni configuraciones y no se ejecutó Maven. La revisión posterior fue solo estructural (tablas, finales de línea, archivos modificados en Git). No se verificó ninguna implementación JWT porque todavía no existe. | **Revisión humana:** limité el alcance a dos documentos. Rechacé la eliminación innecesaria del plan preliminar, por lo que el contenido se reemplazó en el mismo archivo. Exigí conservar las entradas de P1 y P2. Revisé las decisiones de seguridad antes de autorizar la implementación. El contrato JWT sigue pendiente de confirmación por los consumidores **[P]** y el contrato de catálogo está pendiente de Gerardo **[P]**. |
+| P3-05 | 11/11/2026 | GitHub Copilot en VS Code, modelo no registrado; atribución por archivo no verificable | Prompt o mixto **[P]** (modo no registrado) | Implementar la infraestructura JWT y la autorización por roles según el plan P3 v1.0. | Commit local `9a5b295` (`feat(p3-05): configurar seguridad JWT y documentar riesgos OWASP`). Archivos principales: `SecurityConfig`, `JwtConfig`, `JwtProperties`, `RolesClaimValidator` y `ManejadorErroresSeguridad`. | **[V] Implementado:** sesiones `STATELESS` y CSRF deshabilitado; `POST /api/auth/login` y `POST /api/usuarios` públicos; `GET /actuator/health` público; listado, consulta, actualización y eliminación de usuarios restringidos a `ADMIN`. `JwtConfig` valida HS256, `iss`, `exp`, `iat` y `sub`. `RolesClaimValidator` exige `roles` como arreglo no vacío de roles conocidos. `ManejadorErroresSeguridad` responde 401 o 403. Credenciales y `JWT_SECRET` se leen desde configuración externa; expiración de 3600 s. En el commit cambiaron `config/owasp-suppressions.xml` (312 líneas insertadas) y `docs/SECURITY-REPORT.md` (129). **[D] Historial:** 66 pruebas aprobadas y JaCoCo 86.06 %. En P3-05 todavía no existía la emisión de JWT mediante login. | Apliqué las decisiones de P3-02 y P3-03: validación estricta del claim `roles`, tolerancia de reloj de 0 s y respuestas 401/403 genéricas. Las supresiones OWASP vencen el 2026-12-06 y no presentan las vulnerabilidades como corregidas. No hay evidencia archivada de una revisión humana específica de este commit **[P]**. |
+| P3-06 | 11/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt, con estrategia orientada a TDD **[P]** (modo no registrado) | Implementar el login con correo y contraseña, y emitir un JWT HS256 tras verificar las credenciales. | Prompts no archivados en `prompts/` (descripción fiel, no transcripción). Nuevos: `AuthController`, `AuthService`, `TokenService`, `LoginRequest`, `LoginResponse` y `CredencialesInvalidasException`. Modificados: `Usuario`, `UsuarioRepository`, `RestriccionesUsuario`, `CrearUsuarioRequest` y `ApiExceptionHandler`. | **[V] Implementado:** `POST /api/auth/login` normaliza el correo con `strip()` y `toLowerCase(Locale.ROOT)`, lo busca con JPQL (`buscarPorEmailNormalizado`) y compara con `PasswordEncoder.matches()`. Las credenciales incorrectas producen un 401 genérico. `TokenService` emite HS256 con exactamente `iss`, `sub`, `roles`, `iat` y `exp`. La respuesta contiene `accessToken`, `tokenType` (`Bearer`) y `expiresIn` (3600). Las contraseñas se limitan a 72 bytes UTF-8. `Usuario.getPasswordHash()` tiene `@JsonIgnore`. **[V] Pruebas:** 79 pruebas en los reportes de `target/`, 0 fallos y JaCoCo de líneas 88.40 % (221/250); instrucciones 86.99 %. | **Correcciones posteriores de revisión humana** (no atribuidas originalmente a Copilot): (1) revisé producción y pruebas; (2) `toString()` seguro en `LoginResponse` que oculta el token, con `LoginResponseTest`; (3) `AuthServiceTest` verifica `emitir(12L, Rol.ADMIN)`; (4) `LoginRequestTest` comprueba 72 y 74 bytes con caracteres multibyte; (5) ejecuté pruebas focalizadas y luego la verificación integral. |
+
+### Evidencias de P3-06
+
+- **Calidad [D]:** `.\mvnw.cmd -B clean verify` reportado como `BUILD SUCCESS`, con 79 pruebas, 0 fallos, 0 errores y 0 omitidas; Checkstyle con 0 violaciones; PMD/CPD aprobados; SpotBugs con 0 hallazgos; JaCoCo cumplido; OWASP Dependency-Check completado con advertencias de vulnerabilidades pendientes. Los controles superados no equivalen a una auditoría de seguridad completa. La salida de consola no está archivada **[P]**.
+- **Pruebas funcionales manuales [D]:** realizadas el 11/11/2026 con Postman, Spring Boot y PostgreSQL 16.15, ejecutadas por el responsable fuera de Copilot.
+  - *Autenticación:* login correcto con JWT (200); sin JWT en listado (401); contraseña incorrecta y correo inexistente con el mismo 401 genérico; JWT con firma modificada (401); correo en mayúsculas y con espacios (200).
+  - *Autorización:* JWT `SOLICITANTE` en endpoint administrativo (403); JWT `ADMIN` en `GET /api/usuarios` (200).
+  - *Validación:* correo inválido con contraseña vacía (400); contraseña de más de 72 caracteres ASCII (400); 37 caracteres `ñ`, equivalentes a 74 bytes UTF-8 (400); intento de enviar `rol: ADMIN` en el registro público (400).
+  - *Registro y persistencia:* health check `UP` (200); registro público con rol `SOLICITANTE` (201) persistido con hash BCrypt; asignación manual de `ADMIN` en PostgreSQL con una fila actualizada; login del administrador (200); eliminación de cuentas de prueba (204) y limpieza verificada en PostgreSQL.
+- **Hallazgo PF-23 (riesgo residual pendiente):** un JWT `ADMIN` emitido antes de eliminar su cuenta siguió aceptándose (200). Con el diseño stateless actual, la eliminación no revoca los tokens vigentes, que expiran a los 3600 s. No está corregido ni mitigado.
+
+#### Matriz de pruebas funcionales manuales — PF-01 a PF-23
+
+Evidencia manual **[D]** proporcionada por el responsable del proyecto, ejecutada el 11/11/2026 con Postman, Spring Boot y PostgreSQL 16.15. No es una ejecución automatizada de Copilot ni incluye colecciones, capturas ni resultados adicionales.
+
+| ID | Escenario | Resultado observado |
+|---|---|---|
+| PF-01 | Health Check `/actuator/health` sin autenticación | 200, UP |
+| PF-02 | Registro público de usuario | 201, rol SOLICITANTE; respuesta sin hash |
+| PF-03 | Verificación del usuario en PostgreSQL | Persistencia y hash BCrypt confirmados |
+| PF-04 | Login con credenciales correctas | 200, JWT emitido |
+| PF-05 | Acceso ADMIN con JWT SOLICITANTE | 403 |
+| PF-06 | Acceso al listado sin JWT | 401 |
+| PF-07 | Login con contraseña incorrecta | 401 genérico |
+| PF-08 | Login con usuario inexistente | 401 genérico equivalente |
+| PF-09 | Login con correo inválido y contraseña vacía | 400 |
+| PF-10 | Contraseña de 73 bytes ASCII | 400 |
+| PF-11 | Contraseña de 37 caracteres `ñ` (74 bytes UTF-8) | 400 |
+| PF-12 | JWT con firma modificada | 401 |
+| PF-13 | Registro de cuenta para pruebas administrativas | 201, rol inicial SOLICITANTE |
+| PF-14 | Asignación manual del rol ADMIN en PostgreSQL | Una fila actualizada |
+| PF-15 | Login con cuenta ADMIN | 200, JWT emitido |
+| PF-16 | Listado de usuarios con JWT ADMIN | 200, sin hashes expuestos |
+| PF-17 | Login con correo en mayúsculas y espacios | 200 |
+| PF-18 | Intento de especificar rol ADMIN durante el registro público | 400 |
+| PF-19 | Consulta en PostgreSQL tras el intento de escalamiento | Cero usuarios creados |
+| PF-20 | Eliminación de usuario de prueba con JWT ADMIN | 204; usuario ausente del listado posterior |
+| PF-21 | Eliminación de la cuenta ADMIN de prueba | 204 |
+| PF-22 | Verificación de limpieza de usuarios de prueba | Cero registros para los ID 9 y 10 |
+| PF-23 | Uso de JWT ADMIN después de eliminar la cuenta | 200; riesgo de revocación confirmado |

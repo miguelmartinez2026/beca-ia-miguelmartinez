@@ -6,6 +6,7 @@
 **Fecha:** 10/11/2026  
 **Versión:** 1.0 — Plan consolidado
 **Estado:** Arquitectura revisada y aceptada para continuar con la implementación. El contrato JWT compartido sigue pendiente de confirmación por los consumidores.
+**Estado de ejecución:** ver la sección 17 (actualización del 11/11/2026). La versión 1.0 se conserva sin cambios en sus decisiones.
 
 ## 1. Objetivo y alcance
 
@@ -384,3 +385,84 @@ La práctica estará lista para revisión cuando:
 - Se haya preparado `docs/SECURITY-REPORT.md` y la bitácora contenga las interacciones reales de P3.
 - El Pull Request y el tag `p3-entrega` correspondan a la versión final.
 - El contrato JWT figure como confirmado únicamente cuando los consumidores lo confirmen; mientras tanto se documenta como pendiente.
+
+## 17. Estado de ejecución (actualización del 11/11/2026)
+
+Esta sección registra el avance real frente a la planificación de las secciones 1 a 16. No modifica las decisiones D-01 a D-15, la matriz de autorización ni el contenido de las fases.
+
+### 17.1 Convención de estado
+
+| Etiqueta | Significado |
+|---|---|
+| **[V]** | Implementado y comprobado en el código o la configuración del repositorio |
+| **[T]** | Cubierto por pruebas automatizadas (resultado reportado de `.\mvnw.cmd -B verify` o reportes de Surefire) |
+| **[F]** | Verificado manualmente con Postman, PostgreSQL y Spring Boot (bitácora, PF-01 a PF-23) |
+| **[P]** | Planificado; sin evidencia de implementación |
+| **[R]** | Riesgo abierto o pendiente de decisión |
+| **[C]** | Pendiente de confirmación por un tercero o equipo consumidor |
+
+### 17.2 Estado por fase
+
+| Fase | Estado | Evidencia |
+|---|---|---|
+| 0. Aprobación | Completada | Plan v1.0 y bitácora incorporados al repositorio (commit `e995a8f`) |
+| 1. Base de seguridad | Implementada y verificada | [V] dependencias en `pom.xml`; [V] `seguridad.jwt`, `management` y `server.error.*` en `application.yaml`; [V] `JwtConfig` (HS256, emisor, tolerancia 0 s, claims requeridos), `JwtProperties`, `SecurityConfig`, `ManejadorErroresSeguridad`, `RolesClaimValidator`; [V] clave de pruebas en memoria (`ClaveJwtPruebas`); [T] 79 pruebas aprobadas; [T] cobertura JaCoCo de líneas 88.40 % (221/250) e instrucciones 86.99 % |
+| 2. Login | Implementada en el árbol de trabajo, sin commit | [V] `POST /api/auth/login` en `AuthController`; [V] búsqueda por correo normalizado, `getPasswordHash()` y comprobación BCrypt en `AuthService`; [V] emisión HS256 en `TokenService` con los cinco claims y 3600 s; [V] límite de 72 bytes UTF-8; [T] `AuthControllerTest`, `TokenServiceTest`, `AuthServiceTest`, `LoginRequestTest`, `LoginResponseTest`; [F] PF-01 a PF-23 |
+| 3. Pruebas criptográficas y endurecimiento | Parcialmente implementada | [V] Actuator expone solo `health`; [V] `server.error.*` en `never`; [V] `anyRequest().denyAll()`; [V] 401 y 403 genéricos; [T] matriz con `jwt()` en `UsuarioControllerSeguridadTest`. [P] Pruebas de límite exacto `exp` (instante `now == exp`) y de firma alterada con `JwtDecoder` real: no se encontraron en las pruebas actuales |
+| 4. Catálogo | No implementada | [P] No existen `CatalogoClient`, `RestClient`, propiedades de catálogo ni `SERVICIOS_CATALOGO_URL` en el código |
+| 5. Documentación | Parcialmente implementada | [V] `docs/SECURITY-REPORT.md` existe como evidencia de P3-05 y no está completamente actualizado con P3-06; su apartado de PF-23 está presente, pero la revisión global del reporte con P3-06 queda pendiente; [V] bitácora actualizada (sin commit); [P] README sin documentación de `JWT_SECRET` ni de autenticación; [P] procedimiento B2 (creación de administrador) sin documentar en el repositorio |
+| 6. Revisión y entrega | Pendiente | [P] `.github/agents/revisor-seguridad.agent.md` no existe; [P] tag `p3-entrega` no existe (solo `p1-entrega` y `p2-entrega`); [P] Pull Request y revisión de un PR de otro integrante |
+
+### 17.3 Pendientes verificados
+
+| Pendiente | Estado | Evidencia y comentario |
+|---|---|---|
+| Integración con `ms-catalogo` mediante `RestClient` | [P] No implementada | Sin código de cliente ni pruebas con servidor simulado (sección 12) |
+| Confirmación del contrato JWT con `ms-catalogo`, `ms-notificaciones` y `ms-tickets` | [C] Pendiente | Sin evidencia de confirmación en el repositorio |
+| Contrato de integración con catálogo (ruta, JSON, errores) | [C] Pendiente de Gerardo | No se han inventado rutas ni DTOs |
+| Revisión de vulnerabilidades OWASP y supresiones temporales | [R] Abierto | `docs/SECURITY-REPORT.md` documenta tres CVE presentes en 6.5.11 y sin corregir, con 33 reglas de supresión en `config/owasp-suppressions.xml` (las reglas no equivalen a vulnerabilidades): 31 con vencimiento `2026-12-06Z` y 2 con `2027-02-06Z`. Desglose: 18 reglas de Spring Security 6.5.11 incorporadas en P3-05C (3 CVE × 6 artefactos, subconjunto del inventario); 3 reglas previas de `spring-security-crypto` (P2), actualizadas a `2026-12-06Z` en P3-05C (antes `2027-02-06Z`, según `docs/SECURITY-REPORT.md`); 10 reglas de Spring Framework 6.2.19 de P2-22 con `2026-12-06Z`; y 2 reglas de Spring Framework 6.2.19 para CVE-2026-47888 y CVE-2026-47893 (P2) con `2027-02-06Z`. Las reglas de P3-05C son aceptación temporal de riesgo, no falsos positivos demostrados; las demás se asocian por CPE según su nota. La decisión es del responsable del desarrollo y no hay aprobación de un tercero |
+| Evaluación de revocación o invalidación de JWT | [R] Riesgo confirmado | No existe revocación inmediata. PF-23: un JWT ADMIN siguió concediendo acceso (HTTP 200 en `GET /api/usuarios`) después de eliminar la cuenta, dentro de la vigencia de 3600 s. Mitigación pendiente de diseño y aprobación |
+| Validación de reglas provisionales de negocio | [R] Pendiente de aprobación | D-01 (registro público provisional) y decisiones 1 a 3 de la sección 14.2 siguen abiertas |
+
+### 17.4 Riesgos de la sección 14.1 que se han materializado o cambiado
+
+| Riesgo original | Estado actual |
+|---|---|
+| Sin revocación: un token es válido hasta 1 h tras eliminar o degradar al usuario | Materializado en PF-23 (ver 17.3). La vigencia corta no basta como mitigación |
+| Contrato JWT no confirmado por los consumidores | Sigue abierto |
+| OWASP Dependency-Check con dependencias nuevas; supresiones temporales | Abierto. 31 de 33 reglas de supresión vencen el `2026-12-06Z`; 2 reglas de Spring Framework 6.2.19 (CVE-2026-47888 y CVE-2026-47893) vencen el `2027-02-06Z` |
+| `Exception.class` → 500 en `ApiExceptionHandler` | No verificado en esta actualización; pendiente de la verificación de la sección 8.1 |
+
+### 17.5 Desviaciones respecto de la planificación
+
+- La sección 16 exige probar el instante exacto `exp`. Hasta esta actualización no hay evidencia de esa prueba; permanece como pendiente.
+- La fase 4 y la fase 6 no han comenzado. La fase 3 está incompleta en sus pruebas criptográficas.
+- Los cambios de P3-05 (commit `9a5b295`) y de P3-06 (sin commit) no están todavía consolidados en una entrega final.
+
+### 17.6 Criterios de aceptación (sección 16): estado
+
+| Criterio | Estado |
+|---|---|
+| Login emite HS256 con los claims del contrato y `expiresIn: 3600` | [V][T] |
+| Mismo 401 genérico para credenciales incorrectas y usuario inexistente | [V][T][F] |
+| 401 y 403 según la matriz de la sección 8 | [V][T] |
+| 404 por recurso inexistente (sección 8.1) | [P] Pendiente de comprobación; no verificado |
+| Rechazo de tokens alterados, de otro emisor, expirados (incluido `exp` exacto) o con `roles` inválido | [V] parcial; [P] prueba de `exp` exacto y de firma alterada con `JwtDecoder` real |
+| Sin exposición de secretos, hashes ni tokens | [V] en código revisado; [P] sin revisión de logs completos |
+| `JWT_SECRET` solo desde el entorno | [V] `application.yaml` usa `${JWT_SECRET}`; [P] documentación en README pendiente |
+| Pruebas con contexto usan clave en memoria | [V] `ClaveJwtPruebas` |
+| Actuator solo `health` | [V] |
+| Infraestructura de `RestClient` probada | [P] No implementada |
+| `.\mvnw.cmd -B verify` correcto con calidad P2 activa y JaCoCo en 70 % | [T] Reportado por la verificación integral; no se volvió a ejecutar en esta actualización |
+| Agente `revisor-seguridad` con revisión humana | [P] Pendiente |
+| `docs/SECURITY-REPORT.md` preparado y bitácora con interacciones reales | [V] |
+| Pull Request y tag `p3-entrega` | [P] Pendiente |
+| Contrato JWT marcado como confirmado solo tras confirmación de consumidores | [C] Sigue pendiente |
+
+### 17.7 Próximos pasos sugeridos
+
+1. Añadir pruebas de límite `exp` (anterior, igual y posterior) y de firma alterada con `JwtDecoder` real.
+2. Decidir el tratamiento de PF-23 (validación de existencia del usuario o revocación) antes de cualquier despliegue.
+3. Implementar la fase 4 solo tras la confirmación del contrato de catálogo por Gerardo, o dejarla fuera de la entrega con aprobación explícita.
+4. Documentar `JWT_SECRET` y el procedimiento B2 en el README, sin credenciales.
+5. Crear el agente revisor y ejecutar la revisión humana antes del tag `p3-entrega`.

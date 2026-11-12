@@ -17,7 +17,6 @@ public record CrearUsuarioRequest(
 		@NotBlank @Size(min = CrearUsuarioRequest.LONGITUD_MINIMA_PASSWORD) String password) {
 
 	private static final int LONGITUD_MINIMA_PASSWORD = 8;
-	private static final int BCRYPT_MAX_BYTES = 72;
 
 	public CrearUsuarioRequest {
 		email = email == null ? null : email.strip().toLowerCase(Locale.ROOT);
@@ -27,7 +26,8 @@ public record CrearUsuarioRequest(
 	@JsonIgnore
 	@AssertTrue(message = "la contraseña no debe superar 72 bytes en UTF-8")
 	public boolean isPasswordDentroDeLimiteBcrypt() {
-		return password == null || password.getBytes(StandardCharsets.UTF_8).length <= BCRYPT_MAX_BYTES;
+		return password == null || password.getBytes(StandardCharsets.UTF_8).length
+				<= RestriccionesUsuario.LONGITUD_MAXIMA_PASSWORD_BCRYPT_BYTES;
 	}
 
 	@Override

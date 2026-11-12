@@ -14,12 +14,13 @@
 | No aplicables bajo la configuración actual (sin supresión) | CVE-2026-47842, CVE-2026-59276 |
 | Riesgo aceptado temporalmente (con supresión hasta 2026-12-06) | CVE-2026-59270, CVE-2026-41707, CVE-2026-47841 |
 | Falsos positivos demostrados | Ninguna |
+| Riesgo funcional abierto (no es CVE) | JWT vigente tras eliminar una cuenta (PF-23). Mitigación pendiente; ver sección 6. |
 
 Una supresión de OWASP solo oculta el hallazgo; no corrige la vulnerabilidad.
 
 ## 2. Inventario de artefactos `org.springframework.security:6.5.11`
 
-Inventario obtenido de `dependency:tree` (2026-11-11) y contrastado con el reporte de OWASP y las reglas de supresión.
+Inventario obtenido de `dependency:tree` (2026-11-11) y contrastado con el reporte de OWASP y las reglas de supresión. No se ha vuelto a ejecutar `dependency:tree` en esta revisión; la columna se mantiene tal como fue registrada.
 La columna de CVE medias indica si OWASP las reporta (no se suprimen).
 
 | packageUrl | Scope | Alta/crítica (3 CVE) | Medias (47842, 59276) |
@@ -55,7 +56,7 @@ Los módulos realmente afectados son otros (ver sección 3).
 - Evidencia:
   - **DPoP está implícitamente disponible.** `OAuth2ResourceServerConfigurer` de Spring Security 6.5.11 registra `DPoPAuthenticationConfigurer` cuando `DPoPProofJwtDecoderFactory` está en el classpath, y `oauth2-jose` está presente por el uso de JWT.
   - `DPoPAuthenticationProvider.authenticate` autentica primero el access token con nuestro `JwtDecoder` (HS256) y falla con `invalid_token` antes de procesar la prueba DPoP.
-  - La verificación exige un token vinculado a una clave mediante `cnf.jkt`. Según el estado actual, el microservicio no emite tokens (el login es P3-06) ni, previsiblemente, tokens con ese claim.
+  - La verificación exige un token vinculado a una clave mediante `cnf.jkt`. Desde P3-06, `POST /api/auth/login` (`TokenService`) emite tokens HS256 sin el claim `cnf`; no hay referencias a `cnf` ni `jkt` en `src/main/java`. La precondición no se cumple con el código actual, pero no se demuestra que la vulnerabilidad sea inexplotable: depende de que ese claim no se añada.
   - No hay código DPoP en `src/`.
 - Condiciones de explotación: un access token válido firmado con nuestra clave y con `cnf.jkt`, más una prueba DPoP reutilizable tras saturar el caché. No se ha demostrado que estén presentes actualmente.
 - Estado: **riesgo aceptado temporalmente**. No corregido. No se afirma que DPoP esté deshabilitado ni que la explotación sea imposible.
@@ -89,7 +90,7 @@ Ninguna supera el umbral `failBuildOnCVSS=7`, por lo que no bloquean el build y 
 
 ## 5. Supresiones en `config/owasp-suppressions.xml`
 
-Todas con `until="2026-12-06Z"` y `packageUrl` exacto, sin expresiones regulares.
+Las reglas de Spring Security (P3-05C y las tres reglas previas de `spring-security-crypto`) usan `until="2026-12-06Z"` y `packageUrl` exacto, sin expresiones regulares. Las dos reglas de Spring Framework 6.2.19 para CVE-2026-47888 y CVE-2026-47893 (P2) tienen `until="2027-02-06Z"` y no se modifican en este documento.
 
 | CVE | core | oauth2-resource-server | oauth2-core | web | config | oauth2-jose | crypto |
 |---|---|---|---|---|---|---|---|
@@ -107,10 +108,79 @@ Todas con `until="2026-12-06Z"` y `packageUrl` exacto, sin expresiones regulares
 ## 6. Riesgos residuales
 
 - Las cinco CVE siguen presentes en 6.5.11 y no están corregidas.
-- DPoP está implícitamente disponible en el resource server. La explotación requeriría un token válido con `cnf.jkt`, que hoy no se emite.
+- DPoP está implícitamente disponible en el resource server. La explotación requeriría un token válido con `cnf.jkt`. El login de P3-06 no emite ese claim, pero la mitigación depende de mantenerlo así (ver sección 7).
 - Las supresiones ocultan las CVE de OWASP: si cambia la configuración, el análisis no avisará automáticamente.
 - Las notas de las supresiones deben mantenerse alineadas con el estado real del código.
 - La corrección 6.5.12 (y 6.4.19, 5.8.28) solo está disponible con soporte Enterprise.
+
+
+### JWT vigente después de eliminar una cuenta (P3-06)
+
+- **Estado:** riesgo de seguridad confirmado mediante prueba funcional.
+- **Fecha de verificación:** 2026-11-11.
+- **Origen:** diseño de autenticación JWT stateless.
+- **Mitigación:** pendiente de definición e implementación.
+
+**Descripción**
+
+La validación de JWT comprueba la firma HS256, el emisor,
+la vigencia y los claims requeridos, pero no consulta
+PostgreSQL para verificar que el usuario continúe existiendo.
+
+Como consecuencia, eliminar una cuenta no revoca
+automáticamente los JWT emitidos anteriormente.
+
+**Evidencia funcional (PF-23)**
+
+1. Se registró un usuario de pruebas con ID 10.
+2. Se asignó el rol ADMIN directamente en PostgreSQL.
+3. El usuario inició sesión y obtuvo un JWT válido.
+4. Se eliminó la cuenta mediante DELETE /api/usuarios/10.
+5. PostgreSQL confirmó que el usuario ya no existía.
+6. Se reutilizó el JWT anterior en GET /api/usuarios.
+7. El servidor respondió HTTP 200 OK, devolviendo [].
+
+**Causa arquitectónica**
+
+La validación del JWT es stateless: `JwtConfig` comprueba firma, emisor, tiempos y claims, pero no consulta el usuario en PostgreSQL. Por eso la eliminación de la cuenta no invalida los tokens ya emitidos.
+
+**Impacto**
+
+Un JWT previamente emitido puede conservar los permisos
+de una cuenta eliminada mientras permanezca vigente.
+
+En el caso de un JWT con rol ADMIN, esto podría permitir
+el acceso a operaciones administrativas aun después
+de eliminar la cuenta asociada.
+
+**Condiciones y alcance**
+
+- La vigencia configurada es de 3600 segundos, con tolerancia de reloj de 0 s (`JwtTimestampValidator(Duration.ZERO)`).
+- No existe revocación inmediata de tokens.
+- El acceso depende de que el JWT conserve una firma
+  válida y no haya expirado.
+- El comportamiento fue reproducido en el entorno local
+  de pruebas funcionales.
+
+**Mitigaciones por evaluar (opciones no aprobadas)**
+
+- Validar la existencia y el estado del usuario durante
+  las solicitudes autenticadas.
+- Implementar revocación de JWT mediante un mecanismo
+  centralizado.
+- Evaluar una reducción de la vigencia del token como
+  medida complementaria.
+
+**Decisión**
+
+El hallazgo queda documentado como riesgo pendiente.
+No se implementará una solución de revocación dentro
+de P3-06 sin definir previamente su diseño y alcance.
+
+La ausencia de revocación debe evaluarse y resolverse
+o aceptarse formalmente antes de un despliegue
+en producción.
+
 
 ## 7. Condiciones que obligan a reevaluar
 
@@ -127,3 +197,30 @@ Todas con `until="2026-12-06Z"` y `packageUrl` exacto, sin expresiones regulares
 Actualizar a una versión corregida cuando sea viable: según el aviso de CVE-2026-59276, Spring Security 7.0.7 o 7.1.1 son OSS (confirmar lo mismo para las demás CVE antes de migrar), o 6.5.12 con soporte Enterprise.
 Subir de línea a Spring Boot / Spring Security requiere aprobación y su propia evaluación de compatibilidad.
 Hasta entonces, mantener las supresiones con su vencimiento y revisarlas en la fecha de reevaluación.
+
+## 9. Controles JWT (P3-05 y P3-06)
+
+Fuentes: `JwtConfig.java`, `JwtProperties.java`, `TokenService.java`, `AuthService.java`, `LoginResponse.java`, `SecurityConfig.java` y `application.yaml`.
+
+**Implementado (verificado en código)**
+
+- Firma HS256: `NimbusJwtDecoder` con HS256 (`JwtConfig`) y `JwsHeader.with(HS256)` (`TokenService`).
+- Secreto desde la variable de entorno `JWT_SECRET`, sin valor por defecto. Debe decodificarse en Base64 y tener al menos 32 bytes (`JwtProperties`).
+- Emisor `ms-usuarios`. Se validan `iss`, `sub`, `iat`, `exp` y el claim `roles`.
+- Vigencia de 3600 s (`seguridad.jwt.expiracion-segundos`) y tolerancia de reloj de 0 s.
+- Sesiones `STATELESS` (`SecurityConfig`).
+- Login `POST /api/auth/login`. La contraseña se compara con BCrypt (`AuthService`).
+- `toString()` enmascara el secreto (`JwtProperties`) y el token (`LoginResponse`).
+- `server.error.*` configurado para no exponer detalles (`application.yaml`).
+
+**Probado**
+
+- Automatizado: 79 pruebas aprobadas en la verificación integral. Este documento no desglosa esas pruebas por control. `LoginResponseTest` verifica que `LoginResponse.toString()` no expone el token. `LoginRequestTest` verifica que `LoginRequest.toString()` no expone la contraseña. Este último devuelve solo el correo y un literal `******`, aunque su formato quedó sin cerrar (falta el `]`); es un detalle de calidad, no un riesgo de exposición.
+- Manual: escenarios PF-01 a PF-23 documentados en `BITACORA-IA.md`. Los 401/403 están verificados según la sección 17.6 de `PLAN-SEGURIDAD-P3.md`.
+
+**Pendiente de verificación o riesgo abierto**
+
+- Pruebas de frontera de `exp` con el `JwtDecoder` real: no se encontraron en la búsqueda realizada. Las pruebas que usan el helper `jwt()` de Spring no validan firma ni expiración.
+- Exposición del hash BCrypt: `Usuario.getPasswordHash()` tiene `@JsonIgnore` (`Usuario.java:71-72`). Las pruebas funcionales manuales PF-02 y PF-16 comprobaron que las respuestas observadas no incluían el hash de contraseña. Pendiente: revisión exhaustiva de los demás endpoints y de posibles rutas de exposición (por ejemplo, logs o errores).
+- Contrato JWT con los microservicios consumidores: pendiente de confirmación (`[C]`).
+- Revocación de JWT tras eliminar una cuenta (PF-23): pendiente.
