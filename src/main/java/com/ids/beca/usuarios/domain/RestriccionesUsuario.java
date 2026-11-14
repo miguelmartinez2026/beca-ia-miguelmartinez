@@ -9,6 +9,7 @@ public final class RestriccionesUsuario {
 	public static final int LONGITUD_MAXIMA_NOMBRE = 120;
 	public static final int LONGITUD_MAXIMA_EMAIL = 254;
 	public static final int LONGITUD_MAXIMA_ROL = 20;
+	public static final int LONGITUD_MAXIMA_PASSWORD_BCRYPT_BYTES = 72;
 
 	private RestriccionesUsuario() {
 	}

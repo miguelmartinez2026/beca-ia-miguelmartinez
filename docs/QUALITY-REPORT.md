@@ -3,8 +3,9 @@
 **Práctica:** P2 — Calidad como código con instrucciones y skills
 **Fecha de línea base:** 06/11/2026
 Última actualización documental: 09/11/2026 (hora de Ciudad de México, UTC−06:00; cierre local y CI del PR #5)
-**Rama de trabajo:** `practica-2`
-**Alcance:** Java 21, Spring Boot 3.5.16, Maven y análisis de calidad de `ms-usuarios`.
+Rama de trabajo: practica-2
+Actualización documental P3: véase la sección 12. Los apartados 12.1 a 12.5 conservan la evidencia histórica de P3-05 y P3-06. El apartado 12.6 documenta el cierre técnico de P3-08 y la verificación integral del 12/11/2026.
+Alcance: Java 21, Spring Boot 3.5.16, Maven y análisis de calidad de ms-usuarios.
 
 Estado ejecutivo: El 09/11/2026 a las 19:02:34 (UTC−06:00), la ejecución local mvnw.cmd -B clean verify concluyó con BUILD SUCCESS, 18 pruebas aprobadas, 0 fallos, 0 errores y 0 omitidas, y el gate de JaCoCo satisfecho. El reporte local de JaCoCo mostró 77.78 % de cobertura de líneas (98/126); también indicó 75 % de instrucciones (402/530) y 46 % de ramas (15/32). GitHub Actions validó el commit 62fbd69 de practica-2 con `./mvnw -B verify`. Se registraron 18 pruebas aprobadas, Checkstyle con 0 violaciones, SpotBugs sin incidencias y BUILD SUCCESS (CI #42733267317). El CI confirma que JaCoCo superó el mínimo de 70 %, pero no publica el porcentaje exacto; esa cifra se obtuvo del reporte local y la captura compartida durante la revisión, no archivada en GitHub.
 
@@ -664,5 +665,219 @@ Cierre de validación: las 18 pruebas pasaron en Surefire y en CI #42733267317; 
 **Alcance y límites:**
 
 - La evidencia demuestra la activación del Skill, no la ejecución de los analizadores: ambas conversaciones se limitaron a herramientas de lectura.
-- La lectura manual de `SKILL.md` (P2-01) es otra cosa y no se cuenta como activación automática.
+- La lectura manual de SKILL.md (P2-01) es otra cosa y no se cuenta como activación automática.
 - El resultado de Maven se documenta en las secciones 4.9 y 10.3.
+
+## 12. Calidad de P3-05 y P3-06 (ms-usuarios)
+
+Esta sección documenta la evidencia disponible al cierre documental de P3. No reemplaza las mediciones de P1 y P2 (§§4 a 10), que son de alcance distinto y no deben compararse directamente con las de P3. No se reejecutaron Maven ni los análisis de seguridad; las cifras proceden de los reportes existentes en target/ o de la bitácora.
+
+### 12.1 Estado de las etapas
+
+| Etapa | Estado | Evidencia |
+|---|---|---|
+| P3-05 — Infraestructura JWT y autorización por roles | Implementada y consolidada en el commit local `9a5b295` | Commit local; sección de P3-05 en BITACORA-IA.md [V] |
+| P3-06 — Login y emisión de JWT | Implementada en el árbol de trabajo; sin commit | Pruebas automatizadas de §12.3 y pruebas manuales PF-01 a PF-23 [V]/[D] |
+| Práctica P3 completa | No declarada como terminada | Pendientes de §12.4 y §12.5 |
+
+### 12.2 Métricas verificadas de P3-06 (reportes existentes en target/)
+
+| Métrica | Valor | Fuente |
+|---|---|---|
+| Pruebas automatizadas | 79 ejecutadas; 0 fallos, 0 errores, 0 omitidas | Surefire: 15 suites en target/surefire-reports/ [V] |
+| Cobertura de líneas (JaCoCo) | 88.40 % (221 cubiertas, 29 no cubiertas; 250 totales) | target/site/jacoco/jacoco.csv, contador LINE [V] |
+| Cobertura de instrucciones | 86.99 % (996 cubiertas, 149 no cubiertas) | jacoco.csv, contador INSTRUCTION [V] |
+| Ramas | 39 cubiertas, 25 no cubiertas | jacoco.csv, contador BRANCH [V] |
+| Checkstyle | 0 violaciones | target/checkstyle-result.xml [V] |
+| PMD | 0 violaciones | target/pmd.xml [V] |
+| CPD (duplicación) | 0 duplicaciones | target/cpd.xml [V] |
+| SpotBugs | 0 hallazgos | target/spotbugsXml.xml [V] |
+| OWASP Dependency-Check | 4 dependencias con vulnerabilidades activas, 10 entradas de vulnerabilidad y 8 nombres de CVE distintos; 3 dependencias con vulnerabilidades suprimidas | target/dependency-check-report.json [V]. Las vulnerabilidades activas no están corregidas; ver §12.4 |
+
+Resultado del build de P3-06: BUILD SUCCESS con clean verify, según indica el responsable del proyecto. Esa salida no se conservó en el repositorio, por lo que se registra como [D].
+
+Marcas de tiempo observadas en target/ (11/11/2026): pmd.xml, cpd.xml, spotbugsXml.xml y dependency-check-report.json entre 13:30:20 y 13:30:43; checkstyle-result.xml a las 13:45:30. Estos archivos no permiten verificar qué ejecución los generó.
+
+### 12.3 Pruebas automatizadas de P3-06
+
+Las 79 pruebas corresponden a las siguientes clases (conteo de Surefire [V]):
+
+| Clase de prueba | Pruebas | Área |
+|---|---|---|
+| JwtPropertiesTest | 6 | Configuración JWT |
+| RolesClaimValidatorTest | 15 | Validación del claim roles |
+| SecurityConfigTest | 2 | Configuración de seguridad |
+| AuthControllerTest | 4 | Controlador de autenticación (login) |
+| UsuarioControllerSeguridadTest | 23 | Autorización por roles y respuestas 401/403 |
+| UsuarioControllerTest | 8 | Controlador de usuarios |
+| CrearUsuarioRequestTest | 1 | Validación de DTO de creación |
+| LoginRequestTest | 3 | DTO de login |
+| LoginResponseTest | 1 | DTO de respuesta de login |
+| MsUsuariosApplicationTests | 1 | Contexto de la aplicación |
+| UsuarioRepositoryTest | 1 | Repositorio |
+| AuthServiceTest | 3 | Autenticación y validación de credenciales |
+| TokenServiceTest | 1 | Emisión de JWT HS256 |
+| UsuarioServiceTest | 8 | Servicio de usuarios |
+| ClaveJwtPruebasTest | 2 | Clave JWT |
+
+Este conteo describe las clases presentes en los reportes. No deduce cuántas pruebas cubren cada requisito de seguridad; los nombres de las clases no garantizan la cobertura de un requisito concreto.
+
+### 12.4 Historial, riesgos y limitaciones
+- Historial de P3-05: 66 pruebas aprobadas y cobertura JaCoCo de 86.06 %. Solo constan en BITACORA-IA.md, en la fila de P3-05, como [D]. Los reportes actuales no permiten reconstruirlas, por lo que no se comparan con las 79 pruebas de P3-06 como si fueran la misma medición. Pendiente: confirmar la fuente original si se requiere trazabilidad.
+- Comparación con P2: P2 registró 18 pruebas y 77.78 % de líneas (98/126) en §10.5. P3-06 registra 250 líneas instrumentadas. Los denominadores son distintos y la diferencia no debe interpretarse como mejora.
+- Pruebas funcionales manuales PF-01 a PF-23: evidencia complementaria de integración funcional, aportada por el responsable del proyecto y registrada como [D] en BITACORA-IA.md. No forman parte de las 79 pruebas automatizadas. Una prueba funcional exitosa no equivale a una auditoría de seguridad completa.
+- Hallazgo pendiente PF-23: un JWT ADMIN siguió siendo aceptado con HTTP 200 después de eliminar la cuenta correspondiente. Riesgo de revocación materializado; sin mitigación. No está corregido.
+- Pruebas de frontera del claim exp con el decodificador JWT real: pendientes de comprobación [P].
+- Pruebas automatizadas de firma JWT manipulada: pendientes de verificación según el plan [P]. La prueba manual PF-12 cubre el caso funcional, no sustituye la prueba automatizada.
+- Vulnerabilidades OWASP: el reporte actual contiene vulnerabilidades activas en Spring Framework y Spring Security. Las supresiones existentes en config/owasp-suppressions.xml no corrigen esas vulnerabilidades. Su vencimiento y su reevaluación figuran en docs/SECURITY-REPORT.md y en el plan P3 (§17) [V]/[P].
+- Integración con ms-catalogo: pendiente según el plan; no se documenta como implementada [P].
+- Contrato JWT compartido con otros microservicios: pendiente de confirmación por los equipos consumidores [P].
+- Cualquier cifra de P3-05 o de P3-06 que no provenga de los reportes listados en §12.2 queda fuera de esta sección.
+
+### 12.5 Información no verificada
+- Resultado completo del build de P3-06 y sus logs: no conservados en el repositorio [D].
+- Porcentaje de cobertura de P3-05 (86.06 %) y número de pruebas (66): no reconstruibles desde los reportes actuales [D].
+- Resultados de Dependency-Check fuera de target/: no archivados.
+- Prueba de exposición del hash BCrypt en todos los endpoints: pendiente de revisión exhaustiva [P].
+
+### 12.6. Cierre técnico de P3 — Integración HTTP y verificación integral (12/11/2026)
+
+**Proyecto:** Sistema de Mesa de Ayuda  
+**Microservicio:** `ms-usuarios`  
+**Rama:** `practica-3`  
+**Commit de P3-08:** `8e59b14`  
+**Fecha de verificación:** 12/11/2026, 00:21:13 (Ciudad de México, UTC−06:00)  
+**Estado:** Implementación local verificada mediante Maven; integración real entre microservicios y revisión de entrega pendientes.
+
+Esta sección registra el resultado técnico posterior a P3-05 y P3-06. Las métricas aquí presentadas corresponden a la última ejecución integral disponible y no sustituyen los resultados históricos documentados en los apartados anteriores.
+
+#### 12.6.1. Alcance de la implementación final
+
+La Práctica 3 incorporó autenticación, autorización y comunicación HTTP saliente entre microservicios.
+
+**Autenticación y autorización:**
+
+- Inicio de sesión mediante `POST /api/auth/login`, verificación de credenciales con BCrypt y emisión de JWT HS256.
+- Validación criptográfica del token y de los claims obligatorios `iss`, `sub`, `roles`, `iat` y `exp`.
+- Conversión de roles a autoridades Spring Security.
+- Restricción de operaciones administrativas del CRUD al rol `ADMIN`.
+- Registro público con asignación automática de `SOLICITANTE`.
+- Respuestas controladas ante problemas de autenticación (401) y autorización (403).
+- Configuración de seguridad sin estado y exposición limitada del endpoint de salud.
+
+**Integración HTTP con MS-Catálogo (P3-08):**
+
+- Incorporación de `RestClient` para realizar solicitudes salientes.
+- Consulta HTTP `GET /api/categorias`.
+- Propagación del JWT mediante `Authorization: Bearer <token>`, obtenido del contexto de seguridad autenticado.
+- Configuración opcional de la URL mediante `SERVICIOS_CATALOGO_URL`.
+- Timeout de conexión de 5000 ms y timeout de lectura de 10000 ms.
+- Validación de la URL configurada.
+- Rechazo de redirecciones HTTP y manejo de respuestas 4xx y 5xx.
+- Manejo de errores de conexión y tiempos de espera mediante excepciones específicas.
+- Pruebas automatizadas sin dependencia de un servidor real de catálogo.
+
+Los archivos principales incorporados durante P3-08 fueron:
+
+| Archivo | Responsabilidad |
+|---|---|
+| `config/RestClientConfig.java` | Configuración del cliente HTTP y sus tiempos de espera |
+| `integration/CatalogoProperties.java` | Propiedades externas de integración |
+| `integration/CatalogoClient.java` | Solicitudes HTTP, propagación del JWT y manejo de respuestas |
+| `integration/CatalogoClientException.java` | Excepción general de integración |
+| `integration/CatalogoClientNotFoundException.java` | Tratamiento específico de recursos inexistentes |
+| `integration/CatalogoClientServiceException.java` | Tratamiento de indisponibilidad y errores del servicio |
+| `integration/CatalogoClientTest.java` | Pruebas automatizadas de integración HTTP simulada |
+| `application.yaml` | URL opcional y configuración de timeouts |
+
+#### 12.6.2. Verificación automatizada final
+
+Se realizaron dos verificaciones consecutivas sobre el código corregido.
+
+**Pruebas específicas del cliente HTTP:**
+
+```cmd
+.\mvnw.cmd -B clean -Dtest=CatalogoClientTest test
+```
+
+Resultado observado:
+
+```text
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS
+```
+
+**Verificación integral del proyecto:**
+
+```cmd
+.\mvnw.cmd -B verify
+```
+
+Resultado observado:
+
+```text
+Tests run: 113, Failures: 0, Errors: 0, Skipped: 0
+All coverage checks have been met.
+BUILD SUCCESS
+```
+
+La ejecución integral finalizó el **12/11/2026 a las 00:21:13 (UTC−06:00)**.
+
+| Control | Resultado final | Evaluación |
+|---|---|---|
+| Compilación Java 21 | Correcta | Cumple |
+| Pruebas JUnit / Surefire | 113 aprobadas, 0 fallos, 0 errores, 0 omitidas | Cumple |
+| Checkstyle | 0 violaciones | Cumple |
+| PMD | Sin infracciones bloqueantes | Cumple |
+| CPD | Sin duplicaciones bloqueantes | Cumple |
+| SpotBugs / FindSecBugs | Verificación superada | Cumple |
+| JaCoCo | `All coverage checks have been met` | Cumple |
+| OWASP Dependency-Check | Verificación superada con advertencias de vulnerabilidades | Cumple el gate; mantiene riesgos |
+| Maven Verify | `BUILD SUCCESS` | Cumple |
+
+**Cobertura:** JaCoCo confirmó que se satisfacen los umbrales configurados. No se registra un porcentaje exacto para esta ejecución final porque la salida disponible no proporciona dicha cifra. El porcentaje de 88.40 % consignado anteriormente corresponde exclusivamente a P3-06 y no debe atribuirse a P3-08.
+
+**Alcance de las pruebas:** las 113 pruebas corresponden al proyecto completo, incluyendo las 11 pruebas del cliente HTTP. La simulación de respuestas permite comprobar el comportamiento del consumidor sin requerir la ejecución de MS-Catálogo.
+
+#### 12.6.3. Incidencias detectadas y correcciones
+
+Durante P3-08 se identificaron y atendieron problemas que impedían superar las verificaciones automatizadas.
+
+| Incidencia | Acción aplicada | Resultado |
+|---|---|---|
+| Propuesta de modificar SpotBugs de `Medium` a `High` | Se rechazó el cambio y se conservó el umbral original | Se mantuvo la exigencia del control |
+| Observación `EI_EXPOSE_REP2` en el cliente HTTP | Se construyó una instancia independiente mediante `restClient.mutate().build()` | Se corrigió la implementación |
+| Pruebas con `RestClient` simulado incorrectamente | Se utilizaron instancias reales del cliente y `MockRestServiceServer` | Se pudieron ejecutar los escenarios HTTP |
+| Autenticación JWT de pruebas considerada inválida | Se corrigió la construcción del `JwtAuthenticationToken` simulado con sus autoridades | Las pruebas alcanzaron el cliente HTTP |
+| Método que excedía la longitud permitida por Checkstyle | Se dividió el manejo de errores en métodos privados | Checkstyle aprobado |
+| Complejidad ciclomática excesiva en validación de URL | Se separó la validación de esquema y destino | PMD aprobado |
+
+Estas correcciones conservaron las reglas de calidad del proyecto. No se modificó el `pom.xml` para reducir la exigencia de SpotBugs durante el cierre de P3-08.
+
+#### 12.6.4. Seguridad, limitaciones y riesgos residuales
+
+El resultado `BUILD SUCCESS` verifica que se cumplieron los controles automatizados configurados, pero no constituye una certificación de seguridad ni demuestra que el sistema esté preparado para producción.
+
+**Limitaciones y pendientes:**
+
+- **Revocación de JWT:** no existe invalidación inmediata de tokens emitidos. Permanece abierto el riesgo documentado mediante PF-23.
+- **HS256 compartido:** la arquitectura requiere controles de distribución, almacenamiento y rotación de la clave entre servicios autorizados.
+- **OWASP Dependency-Check:** persisten advertencias de vulnerabilidades en dependencias. Las supresiones y aceptaciones temporales documentadas no constituyen correcciones.
+- **Integración con MS-Catálogo:** el cliente HTTP está implementado y probado con respuestas simuladas. No se ha verificado una comunicación extremo a extremo contra un MS-Catálogo real.
+- **Consumo funcional:** el cliente saliente todavía requiere integrarse en un caso de uso de la aplicación cuando el contrato y la necesidad funcional estén confirmados.
+- **Contrato JWT compartido:** pendiente de confirmación y pruebas de interoperabilidad con los demás microservicios.
+- **Revisión cruzada:** pendiente según el proceso de revisión del equipo y el coach.
+
+Las observaciones anteriores deben tratarse conforme a los documentos de seguridad existentes y no deben marcarse como corregidas únicamente por el resultado satisfactorio de Maven.
+
+#### 12.6.5. Conclusión técnica
+
+La implementación local de las funcionalidades de P3 alcanzó un resultado satisfactorio en la verificación integral del 12/11/2026.
+
+Se obtuvieron **113 pruebas automatizadas aprobadas**, sin fallos ni errores, con los controles de calidad configurados superados y el umbral de cobertura de JaCoCo satisfecho.
+
+La implementación del cliente HTTP de catálogo fue incorporada mediante el commit `8e59b14`, sin rebajar los criterios de calidad para obtener un resultado favorable.
+
+El cierre técnico local no equivale a la finalización de las actividades de integración interservicios, revisión cruzada y tratamiento de riesgos de seguridad, que permanecen sujetas a verificación y seguimiento.
+
+**Resultado final de verificación local: `BUILD SUCCESS`.**

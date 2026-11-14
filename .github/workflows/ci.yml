@@ -23,6 +23,31 @@ jobs:
           cache: maven
 
       - name: Quality gates y pruebas (mvn verify)
-        run: chmod +x mvnw && ./mvnw -B verify
+        run: |
+          chmod +x mvnw
+          for attempt in 1 2 3; do
+            log=$(mktemp)
+            if ./mvnw -B verify 2>&1 | tee "$log"; then
+              exit 0
+            else
+              status=${PIPESTATUS[0]}
+            fi
+            if [[ "$attempt" == 3 ]] || ! grep -q 'NVD Returned Status Code: 503' "$log"; then
+              exit "$status"
+            fi
+            rm -f "$log"
+            sleep "$((attempt * 20))"
+          done
+        shell: bash
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+  docker-smoke:
+    if: github.ref_name == 'practica-4' || github.head_ref == 'practica-4'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir imagen
+        run: docker build -t ms-usuarios:0.4.0 .
+      - name: Verificar usuario y salud con PostgreSQL
+        run: bash scripts/p4-smoke.sh ms-usuarios:0.4.0
