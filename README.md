@@ -35,7 +35,7 @@ Al registrar un usuario, el servidor asigna automáticamente el rol `SOLICITANTE
 
 Las contraseñas se almacenan mediante hashes BCrypt y no se incluyen en las respuestas de la API.
 
-La Práctica 3 incorpora autenticación con JWT y autorización por roles. Las secciones siguientes describen el estado actual del microservicio. La Práctica 3 no está finalizada: quedan pendientes la integración con `ms-catalogo`, la confirmación del contrato JWT con los consumidores, la revisión cruzada de un PR y la entrega final. La ausencia de revocación inmediata de JWT es un riesgo abierto, documentado por separado (ver las secciones 10 y 11).
+La Práctica 3 incorpora autenticación con JWT y autorización por roles. Las secciones siguientes describen el estado actual del microservicio. La integración con el catálogo real sigue pendiente de validación. La ausencia de revocación inmediata de JWT es un riesgo abierto, documentado por separado (ver las secciones 10 y 11).
 
 ## 1. Descripción y alcance
 
@@ -50,7 +50,7 @@ La Práctica 3 incorpora autenticación con JWT y autorización por roles. Las s
 
 Implementado y verificado en el repositorio: el registro público, la administración de usuarios (solo `ADMIN`), el login con emisión de JWT, la validación local de JWT y la autorización por roles.
 
-Planificado o pendiente, no implementado en este repositorio: la integración saliente con `ms-catalogo` mediante `RestClient`, la revocación de tokens, la confirmación del contrato JWT con otros microservicios y la gestión de roles mediante API (no existe ningún endpoint para cambiar roles).
+Planificado o pendiente, no implementado en este repositorio: la revocación de tokens, la confirmación del contrato JWT con otros microservicios y la gestión de roles mediante API (no existe ningún endpoint para cambiar roles).
 
 ## 2. Requisitos y entorno
 
@@ -432,3 +432,17 @@ Estado de la integración, separado en tres partes:
 - **Contrato JWT y pruebas entre microservicios: pendientes.** El contrato compartido está pendiente de confirmación por los equipos consumidores, y las pruebas de integración entre microservicios no se han realizado.
 
 La integración HTTP saliente con `ms-catalogo` mediante `RestClient` está implementada y cuenta con pruebas automatizadas que utilizan `MockRestServiceServer`. El cliente permite consultar `GET /api/categorias`, propaga el JWT Bearer del contexto autenticado y contempla tiempos de espera y manejo de errores HTTP. La integración extremo a extremo con el microservicio real y su incorporación a un flujo funcional de MS-Usuarios permanecen pendientes de validación.
+
+## Práctica 4 · Docker
+
+Con Docker Desktop en modo Linux, ejecuta desde la raíz:
+
+```sh
+docker build -t ms-usuarios:0.4.0 .
+docker run --rm ms-usuarios:0.4.0 whoami
+bash scripts/p4-smoke.sh ms-usuarios:0.4.0
+```
+
+La prueba requiere Bash, OpenSSL, curl y jq. Levanta PostgreSQL temporal, usa credenciales efímeras, comprueba el usuario app y valida que Actuator devuelva UP desde el host.
+
+Revisión estática asistida por IA: se revisaron las dos etapas Temurin 21, la copia selectiva del código, el usuario app, la exclusión de .env y .git y el healthcheck con curl. Validación local en Docker Desktop: build de ms-usuarios:0.4.0 correcto, whoami devolvió app y /actuator/health devolvió UP con PostgreSQL 16.

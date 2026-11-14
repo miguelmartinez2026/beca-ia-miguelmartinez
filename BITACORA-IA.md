@@ -192,3 +192,10 @@ Los resultados finales de Maven y de los quality gates provienen de la salida de
 - Revisar y cerrar la documentación y verificaciones de entrega antes de crear el tag de P3.
 
 **Estado:** la corrección JWT y el agente revisor están versionados; **la Práctica 3 todavía no está completa**.
+
+## P4 · Contenedor e integración inicial
+
+- Se tomó practica-3 en a1f4210 como base para preparar el Dockerfile, la skill y el workflow.
+- La revisión asistida por IA comprobó la configuración declarada del contenedor y contrastó las variables con application.yaml.
+- Se construyó ms-usuarios:0.4.0 en Docker Desktop. whoami devolvió app y el healthcheck devolvió UP con PostgreSQL 16 temporal.
+- Se propuso iniciar la integración con usuarios y catálogo. Quedan pendientes la revisión del equipo y las pruebas con servicios reales.
