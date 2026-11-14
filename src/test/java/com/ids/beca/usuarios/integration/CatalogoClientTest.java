@@ -157,12 +157,14 @@ class CatalogoClientTest {
                 .andExpect(header(
                         HttpHeaders.AUTHORIZATION, "Bearer token-test"))
                 .andRespond(withSuccess(
-                        "[{\"id\":1}]",
+                        "[{\"id\":1,\"nombre\":\"Soporte\","
+                                + "\"descripcion\":\"Incidencias\",\"activa\":true}]",
                         MediaType.APPLICATION_JSON));
 
-        Object respuesta = cliente.consultarCategorias();
+        List<CategoriaDto> respuesta = cliente.consultarCategorias();
 
-        assertThat(respuesta).isInstanceOf(List.class);
+        assertThat(respuesta).containsExactly(
+                new CategoriaDto(1L, "Soporte", "Incidencias", true));
         servidor.verify();
     }
 

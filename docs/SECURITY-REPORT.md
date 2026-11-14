@@ -317,7 +317,7 @@ El informe de revisión identificó 11 hallazgos, cuyas clasificaciones se regis
 
 | ID | Severidad reportada | Hallazgo | Tratamiento |
 |---|---|---|---|
-| SEC-001 | ALTA | JWT vigente después de eliminar una cuenta (PF-23) | Riesgo demostrado. Mitigación o aceptación formal pendiente antes de producción. |
+| SEC-001 | ALTA | JWT vigente después de eliminar una cuenta (PF-23) | Justificado para P3. Requiere mitigación o evaluación formal antes de producción. |
 | SEC-002 | ALTA | Clave HS256 compartida entre servicios y ausencia del claim aud | Mantener arquitectura de P3; definir distribución segura, control de acceso y rotación. |
 | SEC-003 | MEDIA | Ausencia de limitación de intentos de login | Pendiente de evaluación y priorización. |
 | SEC-004 | MEDIA | Enumeración de usuarios mediante la respuesta HTTP 409 del registro público. | Revisar requisitos y mitigaciones. |
@@ -348,7 +348,7 @@ Se confirmó el comportamiento mediante PF-23.
 
 No se aprobó introducir revocación o consultas a PostgreSQL en cada petición durante esta corrección de P3.
 
-El riesgo permanece abierto y debe resolverse o aceptarse formalmente antes de producción.
+**Decisión para P3:** se justifica conservar la vigencia de 3600 segundos para el alcance académico. La ventana residual termina al expirar el token. Antes de producción, reducir la vigencia o validar el estado de la cuenta en operaciones sensibles.
 
 **SEC-002 — HS256 compartido**
 
@@ -356,7 +356,7 @@ Se mantiene la decisión arquitectónica de utilizar HS256 con una clave compart
 
 No se aprobó una migración a RS256 ni una modificación del contrato de claims.
 
-La decisión requiere controles de distribución, almacenamiento y rotación del secreto, además de reconocimiento formal del riesgo.
+**Decisión para P3:** se justifica conservar HS256 para la interoperabilidad en el entorno de integración, con acceso al secreto limitado a los servicios autorizados. Antes de producción, definir rotación y evaluar claves asimétricas y validación de audiencia.
 
 **Vulnerabilidades de dependencias**
 
@@ -383,9 +383,9 @@ Se aplicó una corrección mínima y se comprobó mediante pruebas del decodific
 - La auditoría inicial no ejecutó comandos ni pruebas; sus conclusiones se basaron en inspección de código y documentación.
 - La verificación integral posterior de 102 pruebas corresponde al estado del proyecto después de la corrección JWT, no a una nueva auditoría completa.
 - Las vulnerabilidades OWASP previamente documentadas permanecen sin corrección verificada.
-- Las decisiones sobre mitigación o aceptación formal de PF-23 y HS256 compartido siguen pendientes.
+- Las justificaciones de SEC-001 y SEC-002 para el alcance de P3 constan en §10.4.
 - La revisión cruzada del PR de otro integrante no se ha realizado.
 - El contrato JWT compartido y las pruebas proveedor–consumidor todavía requieren coordinación del equipo.
-- La integración saliente mediante `RestClient` sigue pendiente.
+- El cliente saliente de catálogo mediante `RestClient` propaga el Bearer y cuenta con pruebas simuladas de respuesta y error. Queda por validar el flujo con catálogo real.
 
 Este informe registra la revisión automatizada, las verificaciones técnicas y las decisiones humanas tomadas hasta el momento, sin presentar la P3 completa como finalizada.
