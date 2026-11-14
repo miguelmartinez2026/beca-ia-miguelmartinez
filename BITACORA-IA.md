@@ -1,9 +1,9 @@
-# Bitácora de uso de IA — Práctica 1
+# Bitácora de uso de IA — Prácticas 1, 2 y 3
 
 **Proyecto:** Sistema de Mesa de Ayuda  
 **Microservicio:** `ms-usuarios`
 **Herramienta:** GitHub Copilot en VS Code
-**Práctica:** P1 — Del requerimiento al código con prompts
+**Prácticas documentadas:** P1, P2 y P3 (esta última en curso)
 
 En esta bitácora registro cómo utilicé Copilot para desarrollar mi microservicio, qué resultados obtuve y qué decisiones o correcciones realicé durante el proceso.
 
@@ -63,8 +63,132 @@ Los prompts utilizados se encuentran documentados en la carpeta `prompts/`.
 | P2-25 | 07/11/2026 | SonarQube for IDE 6.2.0 en VS Code (instalación y análisis, por el desarrollador) y GitHub Copilot en VS Code, modelo no registrado (documentación) | Extensión de análisis estático (sin Skill) y prompt. | Instalar SonarQube for IDE, validar el análisis de `UsuarioController.java` y documentar la evidencia visual exigida por la guía de IDS. | Prompt «P2-25 — Incorporación de evidencia SonarQube for IDE» (no archivado en `prompts/`; descripción fiel, no transcripción). Evidencia: [sonarqube-servicio.png](docs/img/sonarqube-servicio.png). | **Instalación y análisis (realizados por mí, **[D]**):** instalé SonarQube for IDE 6.2.0 en VS Code y analicé `UsuarioController.java`; el registro de SonarQube confirmó Java 21 reconocido, un archivo Java analizado y `Analysis detected 0 issues and 0 Security Hotspots`. Ese registro no está en el repositorio. **Evidencia visual [V]:** Copilot comprobó que `docs/img/sonarqube-servicio.png` existe y se abre; muestra el código de `UsuarioController` (líneas 25 a 66) y, en el panel inferior, la pestaña SonarQube con «No SonarQube issues to display.». La captura no muestra el nombre del archivo ni el registro de salida. **Cambios de Copilot:** solo dos archivos, sin ejecutar comandos ni hacer commits. (1) `docs/QUALITY-REPORT.md`: sección 10.1 reemplazada por la evidencia con la imagen `![Análisis de UsuarioController.java con SonarQube for IDE](img/sonarqube-servicio.png)`, su procedencia y sus límites; y actualización de las filas de SonarQube en las secciones 2, 3, 9.1 y 10. (2) Esta entrada. No se modificaron código Java, Maven, plugins ni suppressions de OWASP. | Revisión humana: **pendiente de mi revisión** al momento de este registro. Exigí que el resultado se limitara a `UsuarioController.java` y no se presentara como auditoría de todo el proyecto, y que los **48** problemas del panel *Problems* de VS Code (diagnósticos agregados de todas las extensiones) no se confundieran con hallazgos de SonarQube. Limitaciones: el registro de SonarQube y la versión 6.2.0 son datos que yo proporcioné **[D]**; no hay análisis de los demás archivos ni modo conectado a un servidor SonarQube **[P]**; la composición de los 48 problemas de VS Code no se analizó **[P]**. Las entradas de P2-24 y de P2-12 a P2-21 no existen en esta bitácora y no se reconstruyen aquí **[P]**. |
 | P2-26 | 07/11/2026 | SonarQube for IDE | Solicitud directa | Cerrar P2 con pruebas sin PostgreSQL local y evidencia del servicio principal. | Inspeccionar el build, elegir entre H2 y Testcontainers y comprobar la entrega. | Se aisló la prueba de contexto con H2 y se añadieron tres casos negativos de servicio al quedar la cobertura bajo el umbral. Pasaron 16 pruebas, JaCoCo registró 70.15 % y el verify completo terminó en BUILD SUCCESS. SonarQube registró cero issues y cero Security Hotspots en `UsuarioService.java`. | El desarrollador pidió resolver la dependencia y conservar `c3f12ff`. Se eligió H2 porque Docker no estaba disponible y V1 usa SQL específico de PostgreSQL
 
-### Seguimiento de la revisión del 09/11/2026
+## Práctica 3 — Seguridad y microservicios con agentes
 
-- **CI.** La revisión del instructor registró el resultado satisfactorio de [ci-miguel 42735717321](https://github.com/miguelmartinez2026/beca-ia-miguelmartinez/actions/runs/42735717321) sobre `663ad1c`. GitHub Actions ejecutó `./mvnw -B verify` con 18 pruebas y los controles de calidad activos.
-- **OWASP.** La prueba controlada del 09/11 pasó con las quince reglas y falló con diez alertas de CVSS 7.5 a 9.8 al retirar las aceptaciones temporales. Las tres pruebas con un patrón más estrecho volvieron a mostrar los doce CVE de Framework en otros artefactos. El JSON confirmó los doce artefactos del patrón mediante `relatedDependencies` (véase [§6.9.4](docs/QUALITY-REPORT.md#694-estado-de-las-reglas-riesgos-y-decisión)). Se conservaron los CVE, los vencimientos y el umbral. La verificación local de Maven terminó en `BUILD SUCCESS` con OWASP activo y la caché NVD sin actualizar. El JSON registró 8 CVE únicos activos y 15 CVE únicos suprimidos.
-- **Pruebas.** `listarUsuariosDevuelveRespuestasOrdenadasPorId` comprueba la ordenación solicitada al repositorio y el mapeo de entidades a DTO. `eliminarUsuarioExistenteLlamaDeleteById` verifica la eliminación por ID cuando el usuario existe. La verificación local pasó las 18 pruebas y JaCoCo midió 77.78 % de líneas (98/126). La prueba de contexto utilizó H2 sin las variables de PostgreSQL.
+
+Esta sección registra las interacciones con GitHub Copilot durante
+la Práctica 3, desde la planificación de seguridad hasta su
+implementación y verificación.
+
+Las entradas P3-01 a P3-03 corresponden a planificación en modo
+Plan, sin modificaciones al repositorio. P3-04 corresponde a la
+consolidación documental mediante Agent. Las entradas posteriores
+registran implementación, pruebas automatizadas, análisis de
+seguridad y revisión humana.
+
+La revisión humana y las pruebas funcionales realizadas fuera de
+Copilot se identifican expresamente para no atribuir a la IA
+trabajos que no realizó.
+
+Cuando el modelo utilizado o el texto literal de un prompt no
+consten en la evidencia disponible, no se inventarán.
+
+Convención de evidencia:
+**[V]** verificado,
+**[D]** dato proporcionado por mí,
+**[P]** pendiente.
+
+
+| # | Fecha | Herramienta | Tipo (prompt/skill/agente) | Objetivo | Prompt o archivo | Resultado | Qué ajusté y por qué |
+|---|---|---|---|---|---|---|---|
+| P3-01 | 10/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt en modo Plan | Analizar el proyecto y elaborar la primera propuesta de seguridad JWT. | Prompt «P3-01 — Análisis y planificación de seguridad JWT para ms-usuarios» (no archivado en `prompts/`; descripción fiel, no transcripción). | **Propuesta de Copilot [V]:** tras revisar los archivos del proyecto indicados en el prompt, elaboró el **plan v0.2**, con dependencias, arquitectura y componentes, matriz de autorización, plan de pruebas, integración con catálogo y riesgos. No se modificaron archivos ni se ejecutaron comandos. El contrato JWT se tomó de lo indicado en el prompt, porque `docs/seguridad.md` no estaba en el workspace. | **Revisión humana:** detecté que restringir todo el CRUD a `ADMIN` impedía el registro de usuarios y no resolvía la creación del administrador inicial. No acepté el plan v0.2 tal como estaba y pasé las correcciones a P3-02. El contrato JWT sigue pendiente de confirmación por los consumidores **[P]**. |
+| P3-02 | 10/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt en modo Plan | Ajustar la propuesta con decisiones humanas explícitas. | Mensaje de corrección con decisiones numeradas (no archivado en `prompts/`; descripción fiel, no transcripción). | **Propuesta de Copilot [V]:** incorporó mis decisiones y elaboró el **plan v0.3**, un documento de trabajo de la sesión que no se incorporó al repositorio. No se modificaron archivos del repositorio ni se ejecutaron comandos. | **Decisiones humanas:** (1) registro público provisional, con rol fijo `SOLICITANTE`; (2) CRUD administrativo para `ADMIN`; (3) aprovisionamiento manual del primer administrador; (4) validación de los claims del token; (5) simplificación arquitectónica; (6) inclusión de `ms-tickets` entre los consumidores del JWT; (7) pruebas con criptografía real, separadas de las pruebas con `jwt()`; (8) independencia entre la autenticación y el servicio de catálogo. La política de registro público sigue pendiente de validación de negocio **[P]**. |
+| P3-03 | 10/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt en modo Plan | Cerrar las decisiones pendientes y consolidar el plan. | Prompt «P3-03 — Cierre y consolidación del plan de seguridad» (no archivado en `prompts/`; descripción fiel, no transcripción). | **Propuesta de Copilot [V]:** consolidó las decisiones en el **plan v1.0**: resumen de correcciones, matriz de autorización aprobada, lista de componentes, secuencia de implementación con pruebas por fase y riesgos pendientes. Tras mi aprobación de la arquitectura general, el plan se incorporó a `docs/planes/PLAN-SEGURIDAD-P3.md` en una interacción posterior. | **Cambios humanos:** (1) validación estricta del claim `roles`: ausente, nulo, vacío, de tipo incorrecto o con valores desconocidos produce 401, y los roles válidos pero insuficientes producen 403; la propuesta anterior de Copilot respondía 403 en los casos de roles vacíos o desconocidos; (2) tolerancia de reloj de cero segundos, con pruebas de expiración; la propuesta anterior conservaba la tolerancia predeterminada de Spring de 60 s; (3) integración con catálogo mediante `RestClient` como entregable obligatorio, con pruebas simuladas y sin inventar rutas ni contratos; (4) consolidación documental: un único plan, con las diferencias respecto de Copilot registradas solo en esta bitácora. Además confirmé: `getPasswordHash()` solo para `AuthService`, sin hash señuelo, procedimiento manual para el primer administrador sin contraseñas en SQL ni documentación, cuatro dependencias y `spring-security-crypto`, respuesta de login con `accessToken`, `tokenType` y `expiresIn`, y errores 401/403 genéricos. El contrato JWT **no** está confirmado por todo el Equipo 4 y sigue pendiente de los consumidores **[P]**; el contrato de catálogo está pendiente de Gerardo **[P]**. |
+| P3-04 | 10/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt en modo Agent | Consolidar el plan técnico de P3 y documentar las decisiones humanas de las tres interacciones anteriores. | Prompt «P3-04 — Consolidación documental del plan de seguridad» (no archivado en `prompts/`; descripción fiel, no transcripción). | **Cambios de Copilot [V]:** actualizó `docs/planes/PLAN-SEGURIDAD-P3.md` a la **versión 1.0** y registró P3-01, P3-02 y P3-03 en esta bitácora. No se escribió código Java, no se modificaron dependencias ni configuraciones y no se ejecutó Maven. La revisión posterior fue solo estructural (tablas, finales de línea, archivos modificados en Git). No se verificó ninguna implementación JWT porque todavía no existe. | **Revisión humana:** limité el alcance a dos documentos. Rechacé la eliminación innecesaria del plan preliminar, por lo que el contenido se reemplazó en el mismo archivo. Exigí conservar las entradas de P1 y P2. Revisé las decisiones de seguridad antes de autorizar la implementación. El contrato JWT sigue pendiente de confirmación por los consumidores **[P]** y el contrato de catálogo está pendiente de Gerardo **[P]**. |
+| P3-05 | 11/11/2026 | GitHub Copilot en VS Code, modelo no registrado; atribución por archivo no verificable | Prompt o mixto **[P]** (modo no registrado) | Implementar la infraestructura JWT y la autorización por roles según el plan P3 v1.0. | Commit local `9a5b295` (`feat(p3-05): configurar seguridad JWT y documentar riesgos OWASP`). Archivos principales: `SecurityConfig`, `JwtConfig`, `JwtProperties`, `RolesClaimValidator` y `ManejadorErroresSeguridad`. | **[V] Implementado:** sesiones `STATELESS` y CSRF deshabilitado; `POST /api/auth/login` y `POST /api/usuarios` públicos; `GET /actuator/health` público; listado, consulta, actualización y eliminación de usuarios restringidos a `ADMIN`. `JwtConfig` valida HS256, `iss`, `exp`, `iat` y `sub`. `RolesClaimValidator` exige `roles` como arreglo no vacío de roles conocidos. `ManejadorErroresSeguridad` responde 401 o 403. Credenciales y `JWT_SECRET` se leen desde configuración externa; expiración de 3600 s. En el commit cambiaron `config/owasp-suppressions.xml` (312 líneas insertadas) y `docs/SECURITY-REPORT.md` (129). **[D] Historial:** 66 pruebas aprobadas y JaCoCo 86.06 %. En P3-05 todavía no existía la emisión de JWT mediante login. | Apliqué las decisiones de P3-02 y P3-03: validación estricta del claim `roles`, tolerancia de reloj de 0 s y respuestas 401/403 genéricas. Las supresiones OWASP vencen el 2026-12-06 y no presentan las vulnerabilidades como corregidas. No hay evidencia archivada de una revisión humana específica de este commit **[P]**. |
+| P3-06 | 11/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Prompt, con estrategia orientada a TDD **[P]** (modo no registrado) | Implementar el login con correo y contraseña, y emitir un JWT HS256 tras verificar las credenciales. | Prompts no archivados en `prompts/` (descripción fiel, no transcripción). Nuevos: `AuthController`, `AuthService`, `TokenService`, `LoginRequest`, `LoginResponse` y `CredencialesInvalidasException`. Modificados: `Usuario`, `UsuarioRepository`, `RestriccionesUsuario`, `CrearUsuarioRequest` y `ApiExceptionHandler`. | **[V] Implementado:** `POST /api/auth/login` normaliza el correo con `strip()` y `toLowerCase(Locale.ROOT)`, lo busca con JPQL (`buscarPorEmailNormalizado`) y compara con `PasswordEncoder.matches()`. Las credenciales incorrectas producen un 401 genérico. `TokenService` emite HS256 con exactamente `iss`, `sub`, `roles`, `iat` y `exp`. La respuesta contiene `accessToken`, `tokenType` (`Bearer`) y `expiresIn` (3600). Las contraseñas se limitan a 72 bytes UTF-8. `Usuario.getPasswordHash()` tiene `@JsonIgnore`. **[V] Pruebas:** 79 pruebas en los reportes de `target/`, 0 fallos y JaCoCo de líneas 88.40 % (221/250); instrucciones 86.99 %. | **Correcciones posteriores de revisión humana** (no atribuidas originalmente a Copilot): (1) revisé producción y pruebas; (2) `toString()` seguro en `LoginResponse` que oculta el token, con `LoginResponseTest`; (3) `AuthServiceTest` verifica `emitir(12L, Rol.ADMIN)`; (4) `LoginRequestTest` comprueba 72 y 74 bytes con caracteres multibyte; (5) ejecuté pruebas focalizadas y luego la verificación integral. |
+| P3-07 | 11/11/2026 | GitHub Copilot en VS Code, modelo no registrado | Agente personalizado | Crear un agente especializado en revisión de seguridad, con alcance de solo lectura. | `.github/agents/revisor-seguridad.agent.md` | **[V]** Agente creado con herramientas `read` y `search`, sin permisos para modificar archivos ni ejecutar comandos. Posteriormente se incorporó en el commit `ade1a80`. | **Decisión humana:** limitar privilegios y separar la revisión de seguridad de cualquier corrección automática. La existencia del archivo no equivale a una auditoría ejecutada. |
+| P3-08 | 11/11/2026 | GitHub Copilot, agente `revisor-seguridad` | Agente: auditoría estática | Inspeccionar autenticación, autorización, JWT, DTOs, errores, persistencia, dependencias y pruebas. | `.github/agents/revisor-seguridad.agent.md`; análisis reflejado en `docs/SECURITY-REPORT.md` (sección 10). El informe conversacional no se archivó como archivo autónomo. | **[V]** Revisión de solo lectura: 11 hallazgos SEC-001 a SEC-011 (2 altos, 4 medios y 5 bajos; ninguno crítico). Identificó PF-23 y el riesgo de la clave HS256 compartida. No ejecutó Maven ni Dependency-Check. | **Revisión humana:** distinguí riesgos comprobados, hipótesis no verificadas y mejoras. SEC-001/PF-23 y SEC-002 siguen sin mitigación ni aceptación formal para producción. Las supresiones OWASP no equivalen a correcciones. |
+| P3-09 | 11/11/2026 | GitHub Copilot (Agent), Claude Haiku 5.5 | Prompt: pruebas de seguridad | Ampliar las pruebas con un `JwtDecoder` real, sin modificar producción. | `src/test/java/com/ids/beca/usuarios/config/JwtDecoderCriptografiaTest.java` (prompt no archivado en `prompts/`). | **[V]** Se creó una clase con 21 invocaciones de prueba para HS256, firma, clave, algoritmos, expiración y claims. La primera verificación integral tuvo 100 pruebas y **un fallo**: un JWT sin `iat` era aceptado. El comando diagnóstico con `-Dmaven.test.failure.ignore=true` no representó una verificación satisfactoria. | **Decisión humana:** no deshabilitar la prueba ni aprobar un commit con `BUILD FAILURE`; investigar la causa antes de cambiar producción. |
+| P3-10 | 11/11/2026 | GitHub Copilot (Agent), Claude Haiku 5.5 | Prompt: diagnóstico de solo lectura | Determinar por qué un JWT firmado sin `iat` superaba la validación del decodificador. | `JwtDecoderCriptografiaTest.java`; `JwtConfig.java`; salida diagnóstica de Copilot (sin archivo autónomo en el repositorio). | **[V]** El helper firmaba un payload sin `iat`. Durante la conversión de claims, Spring Security 6.5.11 completaba `iat` a partir de `exp` (`exp - 1 s`), antes de los validadores. Copilot corrigió su informe previo, que atribuía erróneamente una diferencia de 3600 s. | **Decisión humana:** exigir presencia de `iat` antes de la conversión estándar; no modificar algoritmos, emisión de JWT ni otros claims. No se ejecutaron comandos ni se modificaron archivos durante este diagnóstico. |
+| P3-11 | 11/11/2026 | GitHub Copilot (Agent), Claude Haiku 5.5 | Prompt: corrección puntual | Rechazar tokens originalmente carentes de `iat` sin alterar HS256 ni el contrato JWT. | `src/main/java/com/ids/beca/usuarios/config/JwtConfig.java` | **[V]** Se añadió `setClaimSetConverter` para rechazar `iat` ausente o nulo antes de delegar en `MappedJwtClaimSetConverter.withDefaults(...)`. Pruebas focalizadas y `clean verify`: **100 pruebas, 0 fallos, BUILD SUCCESS**. | **Revisión humana:** mantuve el alcance mínimo y pedí comprobar también el resultado HTTP; la prueba criptográfica por sí sola no demostraba que la respuesta fuera 401 y no 500. |
+| P3-12 | 11/11/2026 | GitHub Copilot (Agent), Claude Haiku 5.5 | Prompt: regresión HTTP | Comprobar con `JwtDecoder` real la respuesta de un endpoint protegido ante un JWT sin `iat`. | `src/test/java/com/ids/beca/usuarios/controller/UsuarioControllerJwtSinIatTest.java` | **[V]** Dos casos: token sin `iat` → HTTP 401 sin filtrar el detalle ni invocar `UsuarioService`; token equivalente con `iat` → HTTP 200. `@WebMvcTest` usa seguridad y decoder reales, con servicio simulado. Tras corregir una firma `throws Exception`, `clean verify` terminó con **102 pruebas, 0 fallos, 0 errores, 0 omitidas y BUILD SUCCESS**. | **Revisión humana:** descarté cambios adicionales en producción, exigí un control positivo y confirmé que la prueba no usa un `JwtDecoder` simulado. Los quality gates cumplieron sus umbrales; OWASP sigue teniendo riesgos suprimidos o pendientes. |
+| P3-13 | 11/11/2026 | GitHub Copilot (Agent), Claude Haiku 5.5 | Revisión final de solo lectura | Revisar los tres archivos JWT antes de autorizar el commit. | `JwtConfig.java`; `JwtDecoderCriptografiaTest.java`; `UsuarioControllerJwtSinIatTest.java` | **[V]** Revisó diff, archivos nuevos, imports, ausencia de secretos y pruebas deshabilitadas, contrato de emisión con `iat` y `git diff --check`. No modificó archivos ni volvió a ejecutar Maven. | **Decisión humana:** autoricé únicamente esos tres archivos. Realicé el staging y commit directamente en CMD, sin Copilot (`61b9f37`). El agente revisor se guardó en un commit separado (`ade1a80`). |
+
+### Evidencias de P3-06
+
+- **Calidad [D]:** `.\mvnw.cmd -B clean verify` reportado como `BUILD SUCCESS`, con 79 pruebas, 0 fallos, 0 errores y 0 omitidas; Checkstyle con 0 violaciones; PMD/CPD aprobados; SpotBugs con 0 hallazgos; JaCoCo cumplido; OWASP Dependency-Check completado con advertencias de vulnerabilidades pendientes. Los controles superados no equivalen a una auditoría de seguridad completa. La salida de consola no está archivada **[P]**.
+- **Pruebas funcionales manuales [D]:** realizadas el 11/11/2026 con Postman, Spring Boot y PostgreSQL 16.15, ejecutadas por el responsable fuera de Copilot.
+  - *Autenticación:* login correcto con JWT (200); sin JWT en listado (401); contraseña incorrecta y correo inexistente con el mismo 401 genérico; JWT con firma modificada (401); correo en mayúsculas y con espacios (200).
+  - *Autorización:* JWT `SOLICITANTE` en endpoint administrativo (403); JWT `ADMIN` en `GET /api/usuarios` (200).
+  - *Validación:* correo inválido con contraseña vacía (400); contraseña de más de 72 caracteres ASCII (400); 37 caracteres `ñ`, equivalentes a 74 bytes UTF-8 (400); intento de enviar `rol: ADMIN` en el registro público (400).
+  - *Registro y persistencia:* health check `UP` (200); registro público con rol `SOLICITANTE` (201) persistido con hash BCrypt; asignación manual de `ADMIN` en PostgreSQL con una fila actualizada; login del administrador (200); eliminación de cuentas de prueba (204) y limpieza verificada en PostgreSQL.
+- **Hallazgo PF-23 (riesgo residual pendiente):** un JWT `ADMIN` emitido antes de eliminar su cuenta siguió aceptándose (200). Con el diseño stateless actual, la eliminación no revoca los tokens vigentes, que expiran a los 3600 s. No está corregido ni mitigado.
+
+#### Matriz de pruebas funcionales manuales — PF-01 a PF-23
+
+Evidencia manual **[D]** proporcionada por el responsable del proyecto, ejecutada el 11/11/2026 con Postman, Spring Boot y PostgreSQL 16.15. No es una ejecución automatizada de Copilot ni incluye colecciones, capturas ni resultados adicionales.
+
+| ID | Escenario | Resultado observado |
+|---|---|---|
+| PF-01 | Health Check `/actuator/health` sin autenticación | 200, UP |
+| PF-02 | Registro público de usuario | 201, rol SOLICITANTE; respuesta sin hash |
+| PF-03 | Verificación del usuario en PostgreSQL | Persistencia y hash BCrypt confirmados |
+| PF-04 | Login con credenciales correctas | 200, JWT emitido |
+| PF-05 | Acceso ADMIN con JWT SOLICITANTE | 403 |
+| PF-06 | Acceso al listado sin JWT | 401 |
+| PF-07 | Login con contraseña incorrecta | 401 genérico |
+| PF-08 | Login con usuario inexistente | 401 genérico equivalente |
+| PF-09 | Login con correo inválido y contraseña vacía | 400 |
+| PF-10 | Contraseña de 73 bytes ASCII | 400 |
+| PF-11 | Contraseña de 37 caracteres `ñ` (74 bytes UTF-8) | 400 |
+| PF-12 | JWT con firma modificada | 401 |
+| PF-13 | Registro de cuenta para pruebas administrativas | 201, rol inicial SOLICITANTE |
+| PF-14 | Asignación manual del rol ADMIN en PostgreSQL | Una fila actualizada |
+| PF-15 | Login con cuenta ADMIN | 200, JWT emitido |
+| PF-16 | Listado de usuarios con JWT ADMIN | 200, sin hashes expuestos |
+| PF-17 | Login con correo en mayúsculas y espacios | 200 |
+| PF-18 | Intento de especificar rol ADMIN durante el registro público | 400 |
+| PF-19 | Consulta en PostgreSQL tras el intento de escalamiento | Cero usuarios creados |
+| PF-20 | Eliminación de usuario de prueba con JWT ADMIN | 204; usuario ausente del listado posterior |
+| PF-21 | Eliminación de la cuenta ADMIN de prueba | 204 |
+| PF-22 | Verificación de limpieza de usuarios de prueba | Cero registros para los ID 9 y 10 |
+| PF-23 | Uso de JWT ADMIN después de eliminar la cuenta | 200; riesgo de revocación confirmado |
+
+## Evidencias complementarias de P3 — auditoría, corrección JWT y revisión humana
+
+### Agente revisor y hallazgos
+
+El agente personalizado se encuentra en `.github/agents/revisor-seguridad.agent.md` y quedó versionado en `ade1a80` (`feat(p3): agregar agente revisor de seguridad`). La revisión inicial fue estática y de solo lectura, sin ejecutar código, Maven o OWASP Dependency-Check.
+
+Se reportaron **11 hallazgos**: SEC-001 a SEC-011, con **2 altos, 4 medios, 5 bajos y 0 críticos**. La tabla con identificadores, severidades, estado y tratamiento se conserva en `docs/SECURITY-REPORT.md`, sección 10. No se atribuyen al agente comprobaciones que no ejecutó.
+
+Las dos prioridades altas siguen abiertas: **SEC-001**, uso de un JWT todavía vigente después de eliminar su cuenta (PF-23), y **SEC-002**, clave HS256 compartida por los servicios consumidores, con capacidad de firma para quien posea el secreto y sin claim `aud` en el contrato actual. No se implementaron revocación ni una migración a RS256. La ausencia de límite de intentos y la enumeración por registro público también permanecen pendientes. La decisión D-08 sobre diferencias temporales en login es una decisión del proyecto y no equivale a aceptación formal de todos los riesgos para producción.
+
+Los hallazgos OWASP preexistentes y sus supresiones se describen por separado en `docs/SECURITY-REPORT.md`. **Que un quality gate pase no significa que las CVE estén corregidas.** Las supresiones de Spring Security deben reevaluarse el **06/12/2026**.
+
+### Regresión detectada y corregida: claim `iat`
+
+La primera ejecución de las pruebas criptográficas reales incorporó `JwtDecoderCriptografiaTest.java`, con 21 invocaciones. De un total de 100 pruebas, una falló: el decoder aceptaba un JWT firmado sin el claim `iat` original. La ejecución diagnóstica que ignoraba fallos no se usó como criterio de aprobación.
+
+Un análisis posterior confirmó que el token firmado carecía de `iat` y que la conversión de claims de Spring Security 6.5.11 podía completar ese valor antes de la validación personalizada. Se corrigió `JwtConfig.java` para verificar la presencia original de `iat` mediante un convertidor que luego delega en el convertidor predeterminado. La emisión de tokens, HS256 y los demás validadores se mantuvieron sin cambios.
+
+La prueba de regresión HTTP `UsuarioControllerJwtSinIatTest.java` utiliza el `JwtDecoder` real y cubre dos casos: JWT sin `iat` → **401** sin filtrar el motivo interno, y JWT con `iat` → **200** como control positivo. La prueba utiliza `@WebMvcTest` y simula `UsuarioService`; no es una prueba extremo a extremo del sistema completo.
+
+### Resultado de verificación y trazabilidad Git
+
+| Evidencia | Resultado o estado |
+|---|---|
+| Última ejecución `.\mvnw.cmd -B clean verify` | `BUILD SUCCESS` **[D]** |
+| Pruebas automatizadas | **102**; 0 fallos, 0 errores y 0 omitidas **[D]** |
+| Checkstyle | 0 violaciones reportadas **[D]** |
+| PMD / CPD y SpotBugs | Sin fallos reportados **[D]** |
+| JaCoCo | Umbrales de cobertura satisfechos; porcentaje exacto de esta ejecución no registrado **[D]** |
+| OWASP Dependency-Check | La ejecución no bloqueó el build; CVE y supresiones pendientes de reevaluación **[D]** |
+| Corrección y pruebas JWT | Commit `61b9f37` — `fix(p3): validar iat original y reforzar pruebas JWT` **[V]** |
+| Agente revisor | Commit `ade1a80` — `feat(p3): agregar agente revisor de seguridad` **[V]** |
+| Documentación de seguridad | `docs/SECURITY-REPORT.md`; actualización documental posterior, commit no confirmado en esta bitácora **[P]** |
+
+Los resultados finales de Maven y de los quality gates provienen de la salida de Copilot compartida para revisión. **No se adjunta un log integral de consola**, por lo que se registran como datos reportados **[D]**, aunque los commits y archivos afectados se contrastaron con las salidas de Git compartidas.
+
+**Operaciones manuales sin Copilot:** la selección de archivos, `git add` con rutas explícitas, `git diff --cached --check`, los dos commits anteriores y las verificaciones de `git status`/`git log` se realizaron directamente en CMD. No se hizo push ni merge durante esta secuencia.
+
+### Pendientes para completar P3
+
+- Definir y validar con los demás servicios el contrato JWT, la propagación del token y los controles de la clave compartida.
+- Obtener el contrato HTTP real de `ms-catalogo` antes de implementar la llamada saliente mediante `RestClient` y su prueba con respuesta simulada. No se inventan rutas.
+- Realizar la revisión cruzada de PR con el agente y documentar la evidencia.
+- Mantener SEC-001/PF-23, SEC-002 y las CVE bajo seguimiento, sin declarar mitigaciones no implementadas.
+- Revisar y cerrar la documentación y verificaciones de entrega antes de crear el tag de P3.
+
+**Estado:** la corrección JWT y el agente revisor están versionados; **la Práctica 3 todavía no está completa**.

@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -22,10 +23,15 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
+import com.ids.beca.usuarios.config.SecurityConfig;
 import com.ids.beca.usuarios.domain.Rol;
 import com.ids.beca.usuarios.dto.ActualizarUsuarioRequest;
 import com.ids.beca.usuarios.dto.CrearUsuarioRequest;
@@ -35,6 +41,7 @@ import com.ids.beca.usuarios.exception.UsuarioNoEncontradoException;
 import com.ids.beca.usuarios.service.UsuarioService;
 
 @WebMvcTest(UsuarioController.class)
+@Import(SecurityConfig.class)
 class UsuarioControllerTest {
 
 	private static final Instant FECHA_CREACION = Instant.parse("2026-11-04T12:00:00Z");
@@ -44,6 +51,14 @@ class UsuarioControllerTest {
 
 	@MockitoBean
 	private UsuarioService usuarioService;
+
+	// Autenticación simulada: no verifica firma ni expiración (eso corresponde a las pruebas con firmas reales).
+	@MockitoBean
+	private JwtDecoder jwtDecoder;
+
+	private static RequestPostProcessor admin() {
+		return jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
+	}
 
 	@Test
 	void postValidoDevuelve201ConLocationRolSolicitanteYSinContrasenaNiHash() throws Exception {
@@ -75,7 +90,7 @@ class UsuarioControllerTest {
 				.thenReturn(new UsuarioResponse(7L, "Luis Prueba", "luis@example.com", Rol.AGENTE, FECHA_CREACION));
 
 		// Act + Assert
-		mockMvc.perform(get("/api/usuarios/7"))
+		mockMvc.perform(get("/api/usuarios/7").with(admin()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(7))
 				.andExpect(jsonPath("$.nombre").value("Luis Prueba"))
@@ -91,7 +106,7 @@ class UsuarioControllerTest {
 				new UsuarioResponse(2L, "Luis Prueba", "luis@example.com", Rol.AGENTE, FECHA_CREACION)));
 
 		// Act + Assert
-		mockMvc.perform(get("/api/usuarios"))
+		mockMvc.perform(get("/api/usuarios").with(admin()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.length()").value(2))
 				.andExpect(jsonPath("$[0].id").value(1))
@@ -108,7 +123,7 @@ class UsuarioControllerTest {
 				""";
 
 		// Act + Assert
-		mockMvc.perform(put("/api/usuarios/3").contentType(MediaType.APPLICATION_JSON).content(cuerpo))
+		mockMvc.perform(put("/api/usuarios/3").with(admin()).contentType(MediaType.APPLICATION_JSON).content(cuerpo))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(3))
 				.andExpect(jsonPath("$.nombre").value("Nombre Nuevo"))
@@ -121,7 +136,7 @@ class UsuarioControllerTest {
 		// Arrange: el servicio simulado no lanza ninguna excepción
 
 		// Act + Assert
-		mockMvc.perform(delete("/api/usuarios/5"))
+		mockMvc.perform(delete("/api/usuarios/5").with(admin()))
 				.andExpect(status().isNoContent())
 				.andExpect(content().string(""));
 		verify(usuarioService).eliminar(5L);
@@ -150,7 +165,7 @@ class UsuarioControllerTest {
 		when(usuarioService.obtener(99L)).thenThrow(new UsuarioNoEncontradoException(99L));
 
 		// Act + Assert
-		mockMvc.perform(get("/api/usuarios/99"))
+		mockMvc.perform(get("/api/usuarios/99").with(admin()))
 				.andExpect(status().isNotFound())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
 				.andExpect(jsonPath("$.status").value(404))

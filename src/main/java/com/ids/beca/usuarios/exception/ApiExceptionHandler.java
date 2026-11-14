@@ -35,6 +35,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 	private static final String ERRORS_PROPERTY = "errors";
 	private static final String CLAVE_CAMPO = "campo";
 	private static final String CLAVE_MENSAJE = "mensaje";
+	private static final String MENSAJE_CREDENCIALES_INVALIDAS = "Credenciales invalidas.";
+
+	@ExceptionHandler(CredencialesInvalidasException.class)
+	public ProblemDetail manejarCredencialesInvalidas(CredencialesInvalidasException ex) {
+		return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, MENSAJE_CREDENCIALES_INVALIDAS);
+	}
 
 	@ExceptionHandler(UsuarioNoEncontradoException.class)
 	public ProblemDetail manejarNoEncontrado(UsuarioNoEncontradoException ex) {
