@@ -3,7 +3,9 @@ package com.ids.beca.usuarios.integration;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.core.Authentication;
@@ -37,7 +39,7 @@ public class CatalogoClient {
         this.baseUrl = propiedades.getUrl();
     }
 
-    public Object consultarCategorias() {
+    public List<CategoriaDto> consultarCategorias() {
         String token = extraerToken();
 
         if (baseUrl == null || baseUrl.isBlank()) {
@@ -54,7 +56,7 @@ public class CatalogoClient {
         return realizarSolicitud(url, token);
     }
 
-    private Object realizarSolicitud(String url, String token) {
+    private List<CategoriaDto> realizarSolicitud(String url, String token) {
         try {
             return restClient.get()
                     .uri(url)
@@ -67,7 +69,7 @@ public class CatalogoClient {
                                     manejarErrorCliente(response.getStatusCode().value()))
                     .onStatus(HttpStatusCode::is5xxServerError,
                             (request, response) -> rechazarErrorServidor())
-                    .body(Object.class);
+                    .body(new ParameterizedTypeReference<List<CategoriaDto>>() { });
 
         } catch (HttpClientErrorException.NotFound e) {
             throw new CatalogoClientNotFoundException(

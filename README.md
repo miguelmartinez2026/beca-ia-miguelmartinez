@@ -35,7 +35,7 @@ Al registrar un usuario, el servidor asigna automáticamente el rol `SOLICITANTE
 
 Las contraseñas se almacenan mediante hashes BCrypt y no se incluyen en las respuestas de la API.
 
-La Práctica 3 incorpora autenticación con JWT y autorización por roles. Las secciones siguientes describen el estado actual del microservicio. La Práctica 3 no está finalizada: quedan pendientes la integración con `ms-catalogo`, la confirmación del contrato JWT con los consumidores, la revisión cruzada de un PR y la entrega final. La ausencia de revocación inmediata de JWT es un riesgo abierto, documentado por separado (ver las secciones 10 y 11).
+La Práctica 3 incorpora autenticación con JWT y autorización por roles. Las secciones siguientes describen el estado actual del microservicio. El cliente HTTP de `ms-catalogo` está implementado y probado con respuestas simuladas. Queda por validar el flujo con el servicio real. La ausencia de revocación inmediata de JWT es un riesgo abierto, documentado por separado (ver las secciones 10 y 11).
 
 ## 1. Descripción y alcance
 
@@ -50,7 +50,7 @@ La Práctica 3 incorpora autenticación con JWT y autorización por roles. Las s
 
 Implementado y verificado en el repositorio: el registro público, la administración de usuarios (solo `ADMIN`), el login con emisión de JWT, la validación local de JWT y la autorización por roles.
 
-Planificado o pendiente, no implementado en este repositorio: la integración saliente con `ms-catalogo` mediante `RestClient`, la revocación de tokens, la confirmación del contrato JWT con otros microservicios y la gestión de roles mediante API (no existe ningún endpoint para cambiar roles).
+Planificado o pendiente, no implementado en este repositorio: la revocación de tokens, la confirmación del contrato JWT con otros microservicios y la gestión de roles mediante API (no existe ningún endpoint para cambiar roles).
 
 ## 2. Requisitos y entorno
 
